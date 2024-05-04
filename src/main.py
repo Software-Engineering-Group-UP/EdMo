@@ -37,6 +37,8 @@ class mcGUI(object):
         self.kts = MT.KTS_model()
         self.machine = MT.KTS(model=self.kts, title="", show_state_attributes=True)
 
+        self.ctlFormulas = []
+
         # frame for atomic propositions
         self.create_ap_frame()
         self.ap_frame.grid(column=0,row=0,sticky="nsew", padx=5, pady=5)
@@ -97,7 +99,7 @@ class mcGUI(object):
         ap_label = tk.Label(self.ctl_frame, text="Manage CTL-Formulas", borderwidth=2, relief="groove")
         ap_label.grid(column=0,row=0,columnspan=3,sticky="nsew")
 
-        editCTL_button = tk.Button(master=self.ctl_frame, text="Edit")
+        editCTL_button = tk.Button(master=self.ctl_frame, text="Edit", command=self.openCTLwindow)
         editCTL_button.grid(column=0,row=1,sticky="nw")
 
         self.description_button = tk.Button(master=self.ctl_frame, text="Description", command=self.showDescription)
@@ -292,6 +294,74 @@ class mcGUI(object):
         self.ctl1bg.config(bg="lightgreen")
         self.ctl2bg.config(bg="darksalmon")
         self.ctl3bg.config(bg="lightgreen")
+
+    def openCTLwindow(self):
+
+        self.ctlWindow = tk.Toplevel(self.root)
+        self.ctlWindow.title("Create CTL Formula")
+        self.ctlWindow.geometry("400x300")
+        self.ctlWindow.rowconfigure(index=[0,1,2,3],weight=1)
+        self.ctlWindow.columnconfigure(index=[0,1,2],weight=1)
+
+        formula_label = tk.Label(self.ctlWindow, text="Enter CTL Formula:")     
+        formula_label.grid(column=0, row=0, sticky="e")
+
+        description_label = tk.Label(self.ctlWindow, text="Enter description (optional):")     
+        description_label.grid(column=0, row=1, sticky="e")   
+
+        states_label = tk.Label(self.ctlWindow, text="Pick states for the formula:")
+        states_label.grid(column=0, row=2, sticky="ne")
+
+        self.formula_entry = tk.Entry(self.ctlWindow)
+        self.formula_entry.grid(column=1, row=0, sticky="w")
+
+        self.description_entry = tk.Entry(self.ctlWindow)
+        self.description_entry.grid(column=1, row=1, sticky="w")
+
+        done_CTLwindow = tk.Button(self.ctlWindow, text="Done", command=self.saveCTL)
+        done_CTLwindow.grid(column=0, row=3, columnspan=3)
+
+        self.canvas = tk.Canvas(self.ctlWindow, width=100, height=150) # canvas to add scrollbar later
+        self.canvas.grid(column=1, row=2, sticky="w")
+        frame = tk.Frame(self.canvas)
+
+        self.canvas.create_window((0,0), window=frame, anchor="nw", tags="frame")
+
+        # create checkboxes for all states
+        state_count = 0
+
+        self.check_vars = []
+        for v in range(len(self.states)):
+            self.check_vars.append(tk.IntVar(value=1))
+        
+        for s in self.states:
+            current_state = s['name']
+            tk.Checkbutton(master=frame, text=current_state, variable=self.check_vars[state_count]).grid(column=0, row=state_count, sticky="w")
+            state_count += 1
+        
+        # create scrollbar for states
+        self.state_scrollbar = tk.Scrollbar(self.ctlWindow, orient="vertical", command=self.canvas.yview)
+        self.state_scrollbar.grid(column=2, row=2, sticky="ns")
+
+        frame.update_idletasks()
+        self.canvas.configure(yscrollcommand=self.state_scrollbar.set, scrollregion=self.canvas.bbox("all"))
+
+    def saveCTL(self):
+
+        checked_states = []
+
+        for i in range(len(self.states)):
+            if self.check_vars[i].get() == 1:
+                checked_states.append(self.states[i]['name'])
+        
+        if len(checked_states) == len(self.states):
+            checked_states = ['All']
+
+        self.ctlFormulas.append({'formula': self.formula_entry.get(), 'description': self.description_entry.get(),
+                                 'states': checked_states, 'active': False, 'result': 'unknown'})
+        
+        self.ctlWindow.destroy()
+        
 
 
 if __name__ == "__main__":
