@@ -53,6 +53,7 @@ class mcGUI(object):
 
         self.root.mainloop()
 
+
     def create_ap_frame(self):
         self.ap_frame = tk.Frame(self.root, width=450, height=250)
         self.ap_frame.grid_propagate(0)
@@ -88,53 +89,34 @@ class mcGUI(object):
 
             state_count += 1
 
+
     def create_ctl_frame(self):
         self.ctl_frame = tk.Frame(self.root, width=450, height=250)
         self.ctl_frame.grid_propagate(0)
 
-        self.ctl_frame.columnconfigure(index=[0,1,2],weight=1)
-        self.ctl_frame.columnconfigure(index=[0,1],minsize=166)
-        self.ctl_frame.rowconfigure(index=[0,1,2,3,4],weight=2)
+        self.ctl_frame.columnconfigure(index=[0,1,2,3],weight=1)
+        self.ctl_frame.columnconfigure(index=[0,1,2],minsize=110)
+        self.ctl_frame.rowconfigure(index=[0,1,2,3],weight=2)
 
-        ap_label = tk.Label(self.ctl_frame, text="Manage CTL-Formulas", borderwidth=2, relief="groove")
-        ap_label.grid(column=0,row=0,columnspan=3,sticky="nsew")
+        ctl_label = tk.Label(self.ctl_frame, text="Manage CTL-Formulas", borderwidth=2, relief="groove")
+        ctl_label.grid(column=0,row=0,columnspan=4,sticky="nsew")
 
-        editCTL_button = tk.Button(master=self.ctl_frame, text="Edit", command=self.openCTLwindow)
+        editCTL_button = tk.Button(master=self.ctl_frame, text="Add", command=self.openCTLwindow)
         editCTL_button.grid(column=0,row=1,sticky="nw")
 
+        self.delete_button = tk.Button(master=self.ctl_frame, text="Delete", command=self.openDelWindow)
+        self.delete_button.grid(column=1,row=1,sticky="nw")
+
         self.description_button = tk.Button(master=self.ctl_frame, text="Description", command=self.showDescription)
-        self.description_button.grid(column=0,row=1,sticky="ne")
+        self.description_button.grid(column=2,row=1,sticky="nw")
 
         check_button = tk.Button(master=self.ctl_frame, text="Check", command=self.checkModel)
-        check_button.grid(column=2,row=1,sticky="ne")
+        check_button.grid(column=3,row=1,sticky="ne")
 
-        self.ctl1bg = tk.Label(master=self.ctl_frame, height=2) # set background for checkboxes, colored when checked
-        self.ctl1bg.grid(column=0,row=2,columnspan=3,sticky="ew")
-        self.ctl2bg = tk.Label(master=self.ctl_frame, height=2)
-        self.ctl2bg.grid(column=0,row=3,columnspan=3,sticky="ew")
-        self.ctl3bg = tk.Label(master=self.ctl_frame, height=2)
-        self.ctl3bg.grid(column=0,row=4,columnspan=3,sticky="ew")
+        self.number_formulas = 0
+        self.ctl_Checkboxes = []
+        self.ctl_states = []
 
-        f1 = tk.IntVar()
-        self.ctl1 = tk.Checkbutton(master=self.ctl_frame, text="AF(transferred)", variable=f1)
-        self.ctl1.grid(column=0,row=2,columnspan=2,sticky="w")
-
-        f2 = tk.IntVar()
-        self.ctl2 = tk.Checkbutton(master=self.ctl_frame, text="AG(l_in)", variable=f2)
-        self.ctl2.grid(column=0,row=3,columnspan=2,sticky="w")
-
-        f3 = tk.IntVar()
-        self.ctl3 = tk.Checkbutton(master=self.ctl_frame, text="EU(l_in,l_out)", variable=f3)
-        self.ctl3.grid(column=0,row=4,columnspan=2,sticky="w")
-
-        self.s1 = tk.Label(self.ctl_frame, text="[All]")
-        self.s1.grid(column=2,row=2,sticky="w")
-
-        self.s2 = tk.Label(self.ctl_frame, text="[Login]")
-        self.s2.grid(column=2,row=3,sticky="w")
-
-        self.s3 = tk.Label(self.ctl_frame, text="[Finance Overview]")
-        self.s3.grid(column=2,row=4,sticky="w")
 
     def create_graph_frame(self):
         self.graph_frame = tk.Frame(self.root, height=500, width=1000)
@@ -149,6 +131,7 @@ class mcGUI(object):
         self.graph_display = tk.Label(self.graph_frame, text="no diagram loaded", height=29)
         self.graph_display.grid(column=0,row=1,sticky="nsew")
 
+
     def import_kts(self):
         diagramPath = fd.askopenfilename(title='Select a State Machine Diagram', initialdir='./examples', filetypes=[('XML files', '*.xml')])
 
@@ -162,7 +145,8 @@ class mcGUI(object):
         self.clear_statelabels()
         self.clear_apentrys()
         self.update_ap_frame()
-        
+
+
     def update_image(self):
         img = Image.open("src/kts.png")
         width, height = img.size
@@ -171,6 +155,7 @@ class mcGUI(object):
         self.graph_display = tk.Label(self.graph_frame, image=self.graph_image, height=250)
         self.graph_display.image = self.graph_image
         self.graph_display.grid(column=0,row=1,sticky="nsew")
+
 
     def update_ap_frame(self):
         rows_count = list(range(len(self.machine.states.items())+3))
@@ -190,11 +175,13 @@ class mcGUI(object):
 
             state_count += 1
 
+
     def clear_aplabels(self):
         for i in range(len(self.ap_labels)):
             self.ap_labels[i].destroy
         
         self.ap_labels.clear()
+
 
     def clear_statelabels(self):
         for i in range(len(self.state_labels)):
@@ -202,11 +189,13 @@ class mcGUI(object):
         
         self.state_labels.clear()
 
+
     def clear_apentrys(self):
         for i in range(len(self.ap_entrys)):
             self.ap_entrys[i].destroy
         
         self.ap_entrys.clear()
+
 
     def editAP(self):
         self.editAP_button.destroy()
@@ -254,23 +243,24 @@ class mcGUI(object):
         self.machine.generate_image(self.kts)
         self.update_image()
 
+
     def showDescription(self):
         self.description_button.destroy()
         self.formula_button = tk.Button(master=self.ctl_frame, text="Formula", command=self.showFormula)
-        self.formula_button.grid(column=0,row=1,sticky="ne")
+        self.formula_button.grid(column=2,row=1,sticky="nw")
 
-        self.ctl1.config(text="eventually money must have been transferred")
-        self.ctl2.config(text="the user must always be logged in")
-        self.ctl3.config(text="the user must be logged in until they are logged out")
+        for i in range(len(self.ctlFormulas)):
+            self.ctl_Checkboxes[i].config(text=self.ctlFormulas[i]['description'])
+
 
     def showFormula(self):
         self.formula_button.destroy()
         self.description_button = tk.Button(master=self.ctl_frame, text="Description", command=self.showDescription)
-        self.description_button.grid(column=0,row=1,sticky="ne")
+        self.description_button.grid(column=2,row=1,sticky="nw")
 
-        self.ctl1.config(text="AF(transferred)")
-        self.ctl2.config(text="AG(l_in)")
-        self.ctl3.config(text="EU(l_in,l_out)")
+        for i in range(len(self.ctlFormulas)):
+            self.ctl_Checkboxes[i].config(text=self.ctlFormulas[i]['formula'])
+
 
     def checkModel(self):
         # to visualize what checking could look like, actual model checking algorithm not yet implemented
@@ -295,34 +285,38 @@ class mcGUI(object):
         self.ctl2bg.config(bg="darksalmon")
         self.ctl3bg.config(bg="lightgreen")
 
+
     def openCTLwindow(self):
 
         self.ctlWindow = tk.Toplevel(self.root)
         self.ctlWindow.title("Create CTL Formula")
         self.ctlWindow.geometry("400x300")
-        self.ctlWindow.rowconfigure(index=[0,1,2,3],weight=1)
+        self.ctlWindow.rowconfigure(index=[0,1,2,3,4],weight=1)
         self.ctlWindow.columnconfigure(index=[0,1,2],weight=1)
 
         formula_label = tk.Label(self.ctlWindow, text="Enter CTL Formula:")     
         formula_label.grid(column=0, row=0, sticky="e")
 
-        description_label = tk.Label(self.ctlWindow, text="Enter description (optional):")     
-        description_label.grid(column=0, row=1, sticky="e")   
-
-        states_label = tk.Label(self.ctlWindow, text="Pick states for the formula:")
-        states_label.grid(column=0, row=2, sticky="ne")
-
         self.formula_entry = tk.Entry(self.ctlWindow)
         self.formula_entry.grid(column=1, row=0, sticky="w")
 
+        self.ctlError_label = tk.Label(self.ctlWindow, text="")
+        self.ctlError_label.grid(column=1, row=1)
+
+        description_label = tk.Label(self.ctlWindow, text="Enter description (optional):")     
+        description_label.grid(column=0, row=2, sticky="e")
+
         self.description_entry = tk.Entry(self.ctlWindow)
-        self.description_entry.grid(column=1, row=1, sticky="w")
+        self.description_entry.grid(column=1, row=2, sticky="w")
+
+        states_label = tk.Label(self.ctlWindow, text="Pick states for the formula:")
+        states_label.grid(column=0, row=3, sticky="ne")
 
         done_CTLwindow = tk.Button(self.ctlWindow, text="Done", command=self.saveCTL)
-        done_CTLwindow.grid(column=0, row=3, columnspan=3)
+        done_CTLwindow.grid(column=0, row=4, columnspan=3)
 
-        self.canvas = tk.Canvas(self.ctlWindow, width=100, height=150) # canvas to add scrollbar later
-        self.canvas.grid(column=1, row=2, sticky="w")
+        self.canvas = tk.Canvas(self.ctlWindow, width=100, height=150) # canvas to add scrollbar
+        self.canvas.grid(column=1, row=3, sticky="w")
         frame = tk.Frame(self.canvas)
 
         self.canvas.create_window((0,0), window=frame, anchor="nw", tags="frame")
@@ -341,26 +335,102 @@ class mcGUI(object):
         
         # create scrollbar for states
         self.state_scrollbar = tk.Scrollbar(self.ctlWindow, orient="vertical", command=self.canvas.yview)
-        self.state_scrollbar.grid(column=2, row=2, sticky="ns")
+        self.state_scrollbar.grid(column=2, row=3, sticky="ns")
 
         frame.update_idletasks()
         self.canvas.configure(yscrollcommand=self.state_scrollbar.set, scrollregion=self.canvas.bbox("all"))
 
+
     def saveCTL(self):
 
-        checked_states = []
+        try:
+            mc_parse(self.formula_entry.get())
+        except Exception as error:
+            self.ctlError_label.config(text=error)
+        else:
+            checked_states = []
 
-        for i in range(len(self.states)):
-            if self.check_vars[i].get() == 1:
-                checked_states.append(self.states[i]['name'])
-        
-        if len(checked_states) == len(self.states):
-            checked_states = ['All']
+            for i in range(len(self.states)):
+                if self.check_vars[i].get() == 1:
+                    checked_states.append(self.states[i]['name'])
+            
+            if len(checked_states) == len(self.states):
+                checked_states = ['All']
 
-        self.ctlFormulas.append({'formula': self.formula_entry.get(), 'description': self.description_entry.get(),
-                                 'states': checked_states, 'active': False, 'result': 'unknown'})
+            new_var = tk.IntVar()
+
+            self.ctlFormulas.append({'formula': self.formula_entry.get(), 'description': self.description_entry.get(),
+                                    'states': checked_states, 'active': False, 'result': 'unknown', 'variable': new_var})
+            
+            self.ctl_Checkboxes.append(tk.Checkbutton(master=self.ctl_frame, text=self.formula_entry.get(), variable=new_var))
+            self.ctl_Checkboxes[self.number_formulas].grid(column=0,row=2+self.number_formulas,columnspan=3,sticky="w")
+
+            self.ctl_states.append(tk.Label(self.ctl_frame, text=str(checked_states)))
+            self.ctl_states[self.number_formulas].grid(column=3,row=2+self.number_formulas,sticky="w")
+
+            self.number_formulas += 1
+            
+            self.ctlWindow.destroy()
+
+
+    def openDelWindow(self):
+        self.delWindow = tk.Toplevel(self.root)
+        self.delWindow.title("Delete CTL Formulas")
+        self.delWindow.geometry("400x300")
+        self.delWindow.rowconfigure(index=[0],weight=1)
+        self.delWindow.columnconfigure(index=[0],weight=1)
+
+        formula_label = tk.Label(self.delWindow, text="Choose Formulas to be deleted:")     
+        formula_label.grid(column=0, row=0, sticky="nw")
+
+        done_delWindow = tk.Button(self.delWindow, text="Done", command=self.deleteCTL)
+        done_delWindow.grid(column=0, row=2)
+
+        delCanvas = tk.Canvas(self.delWindow, height=250, width=100)
+        delCanvas.grid(column=0, row=1, sticky="nsew")
+        delFrame = tk.Frame(delCanvas)
+
+        delCanvas.create_window((0,0), window=delFrame, anchor="nw", tags="delFrame")
+
+        self.del_vars = []
+        del_boxes = []
+
+        for i in range(len(self.ctlFormulas)):
+            self.del_vars.append(tk.IntVar())
+            del_boxes.append(tk.Checkbutton(master=delFrame, text=self.ctlFormulas[i]['formula'], variable=self.del_vars[i]))
+            del_boxes[i].grid(column=0, row=i, sticky="nw")
+
+        delScrollbar = tk.Scrollbar(self.delWindow, orient="vertical", command=delCanvas.yview)
+        delScrollbar.grid(column=1, row=1, sticky="ns")
+        delFrame.update_idletasks()
+        delCanvas.configure(yscrollcommand=delScrollbar.set, scrollregion=delCanvas.bbox("all"))
+
+
+    def deleteCTL(self):
         
-        self.ctlWindow.destroy()
+        self.delWindow.destroy()
+
+        for i in range(len(self.ctl_Checkboxes)):
+            self.ctl_Checkboxes[i].destroy()
+            self.ctl_states[i].destroy()
+        
+        self.ctl_Checkboxes.clear()
+        self.ctl_states.clear()
+
+        for i in range(len(self.ctlFormulas)):
+            if self.del_vars[i].get() == 1:
+                self.ctlFormulas.pop(i)
+
+        self.number_formulas = 0
+
+        for i in range(len(self.ctlFormulas)):
+            self.ctl_Checkboxes.append(tk.Checkbutton(master=self.ctl_frame, text=self.ctlFormulas[i]['formula'], variable=self.ctlFormulas[i]['variable']))
+            self.ctl_Checkboxes[self.number_formulas].grid(column=0,row=2+self.number_formulas,columnspan=3,sticky="w")
+
+            self.ctl_states.append(tk.Label(self.ctl_frame, text=str(self.ctlFormulas[i]['states'])))
+            self.ctl_states[self.number_formulas].grid(column=3,row=2+self.number_formulas,sticky="w")
+
+            self.number_formulas += 1
         
 
 
