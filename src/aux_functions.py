@@ -22,6 +22,7 @@ def read_xml(diagramPath):
         if value != "" and value != None:
             if state.get('parent') == "1":
                 state_dict['name'] = value
+                state_dict['tags'] = []
                 states.append(state_dict)
                 ids.append([value, state.get('id')])
             else:

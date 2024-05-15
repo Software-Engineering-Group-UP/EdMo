@@ -101,6 +101,8 @@ class mcGUI(object):
         ctl_label = tk.Label(self.ctl_frame, text="Manage CTL-Formulas", borderwidth=2, relief="groove")
         ctl_label.grid(column=0,row=0,columnspan=4,sticky="nsew")
 
+        self.defaultbg = ctl_label.cget('bg')
+
         editCTL_button = tk.Button(master=self.ctl_frame, text="Add", command=self.openCTLwindow)
         editCTL_button.grid(column=0,row=1,sticky="nw")
 
@@ -275,8 +277,43 @@ class mcGUI(object):
 
 
     def checkModel(self):
-        # to visualize what checking could look like, actual model checking algorithm not yet implemented
+        current_kts = KripkeTransitionSystem(states=self.states, transitions=self.transitions, initial=self.states[0]['name'])
+        self.failed_states = set() # set of failed states accross all formulas
+
+        for element in self.ctlFormulas:
+            if element['variable'].get() == 1:
+                result = check_formula(mc_parse(element['formula']), current_kts)
+                for state in element['states']:
+                    if state not in result:
+                        element['failed'].append(state)
+                        self.failed_states.add(state)
+        
+        self.assign_colors()
+
+    
+    def assign_colors(self):
+
         for s in self.states:
+            if s['name'] in self.failed_states:
+                self.machine.model_graphs[id(self.kts)].set_node_style(s['name'], 'unsat')
+            else:
+                self.machine.model_graphs[id(self.kts)].set_node_style(s['name'], 'sat')
+
+        self.machine.generate_image(self.kts)
+        self.update_image()
+
+        for i in range(len(self.ctlFormulas)):
+            if self.ctlFormulas[i]['variable'].get() == 0: # base color if formula not checked
+                self.ctl_Checkboxes[i].config(bg=self.defaultbg)
+            elif self.ctlFormulas[i]['failed'] == []:
+                self.ctl_Checkboxes[i].config(bg='lightgreen')
+            else:
+                self.ctl_Checkboxes[i].config(bg='darksalmon')
+        
+
+
+        # to visualize what checking could look like, actual model checking algorithm not yet implemented
+        """for s in self.states:
             if s["name"] != "Login":
                 self.machine.model_graphs[id(self.kts)].set_node_style(s["name"], 'sat')
             else:
@@ -295,7 +332,7 @@ class mcGUI(object):
 
         self.ctl1bg.config(bg="lightgreen")
         self.ctl2bg.config(bg="darksalmon")
-        self.ctl3bg.config(bg="lightgreen")
+        self.ctl3bg.config(bg="lightgreen")"""
 
 
     def openCTLwindow(self):
@@ -327,7 +364,7 @@ class mcGUI(object):
         done_CTLwindow = tk.Button(self.ctlWindow, text="Done", command=self.saveCTL)
         done_CTLwindow.grid(column=0, row=4, columnspan=3)
 
-        self.canvas = tk.Canvas(self.ctlWindow, width=100, height=150) # canvas to add scrollbar
+        self.canvas = tk.Canvas(self.ctlWindow, width=150, height=150) # canvas to add scrollbar
         self.canvas.grid(column=1, row=3, sticky="w")
         frame = tk.Frame(self.canvas)
 
@@ -365,19 +402,19 @@ class mcGUI(object):
             for i in range(len(self.states)):
                 if self.check_vars[i].get() == 1:
                     checked_states.append(self.states[i]['name'])
-            
-            if len(checked_states) == len(self.states):
-                checked_states = ['All']
 
             new_var = tk.IntVar()
 
             self.ctlFormulas.append({'formula': self.formula_entry.get(), 'description': self.description_entry.get(),
-                                    'states': checked_states, 'active': False, 'result': 'unknown', 'variable': new_var})
+                                    'states': checked_states, 'active': False, 'failed': [], 'variable': new_var})
             
             self.ctl_Checkboxes.append(tk.Checkbutton(master=self.formula_frame, text=self.formula_entry.get(), variable=new_var))
             self.ctl_Checkboxes[self.number_formulas].grid(column=0, row=self.number_formulas, sticky="w")
 
-            self.ctl_states.append(tk.Label(self.formula_frame, text=str(checked_states)))
+            if len(checked_states) == len(self.states):
+                self.ctl_states.append(tk.Label(self.formula_frame, text=str(['All'])))
+            else:
+                self.ctl_states.append(tk.Label(self.formula_frame, text=str(checked_states)))
             self.ctl_states[self.number_formulas].grid(column=1,row=self.number_formulas,sticky="w")
 
             self.number_formulas += 1
