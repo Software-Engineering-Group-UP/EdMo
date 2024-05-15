@@ -96,7 +96,7 @@ class mcGUI(object):
 
         self.ctl_frame.columnconfigure(index=[0,1,2,3],weight=1)
         self.ctl_frame.columnconfigure(index=[0,1,2],minsize=110)
-        self.ctl_frame.rowconfigure(index=[0,1,2,3],weight=2)
+        self.ctl_frame.rowconfigure(index=[0,1,2],weight=2)
 
         ctl_label = tk.Label(self.ctl_frame, text="Manage CTL-Formulas", borderwidth=2, relief="groove")
         ctl_label.grid(column=0,row=0,columnspan=4,sticky="nsew")
@@ -112,6 +112,18 @@ class mcGUI(object):
 
         check_button = tk.Button(master=self.ctl_frame, text="Check", command=self.checkModel)
         check_button.grid(column=3,row=1,sticky="ne")
+
+        self.formula_canvas = tk.Canvas(self.ctl_frame, width=400, height=155)
+        self.formula_canvas.grid(column=0, row=2, columnspan=3, sticky="nws")
+
+        self.formula_frame = tk.Frame(self.formula_canvas)
+        self.formula_canvas.create_window((0,0), window=self.formula_frame, anchor="nw", tags="formula_frame")
+
+        self.formula_scrollbar = tk.Scrollbar(self.ctl_frame, orient="vertical", command=self.formula_canvas.yview)
+        self.formula_scrollbar.grid(column=3, row=2, sticky="ns")
+
+        self.formula_frame.update_idletasks()
+        self.formula_canvas.configure(yscrollcommand=self.formula_scrollbar.set, scrollregion=self.formula_canvas.bbox("all"))
 
         self.number_formulas = 0
         self.ctl_Checkboxes = []
@@ -362,14 +374,17 @@ class mcGUI(object):
             self.ctlFormulas.append({'formula': self.formula_entry.get(), 'description': self.description_entry.get(),
                                     'states': checked_states, 'active': False, 'result': 'unknown', 'variable': new_var})
             
-            self.ctl_Checkboxes.append(tk.Checkbutton(master=self.ctl_frame, text=self.formula_entry.get(), variable=new_var))
-            self.ctl_Checkboxes[self.number_formulas].grid(column=0,row=2+self.number_formulas,columnspan=3,sticky="w")
+            self.ctl_Checkboxes.append(tk.Checkbutton(master=self.formula_frame, text=self.formula_entry.get(), variable=new_var))
+            self.ctl_Checkboxes[self.number_formulas].grid(column=0, row=self.number_formulas, sticky="w")
 
-            self.ctl_states.append(tk.Label(self.ctl_frame, text=str(checked_states)))
-            self.ctl_states[self.number_formulas].grid(column=3,row=2+self.number_formulas,sticky="w")
+            self.ctl_states.append(tk.Label(self.formula_frame, text=str(checked_states)))
+            self.ctl_states[self.number_formulas].grid(column=1,row=self.number_formulas,sticky="w")
 
             self.number_formulas += 1
             
+            self.formula_frame.update_idletasks()
+            self.formula_canvas.configure(yscrollcommand=self.formula_scrollbar.set, scrollregion=self.formula_canvas.bbox("all"))
+
             self.ctlWindow.destroy()
 
 
@@ -417,21 +432,31 @@ class mcGUI(object):
         self.ctl_Checkboxes.clear()
         self.ctl_states.clear()
 
+        del_items = []
+
         for i in range(len(self.ctlFormulas)):
             if self.del_vars[i].get() == 1:
-                self.ctlFormulas.pop(i)
+                del_items.append(self.ctlFormulas[i])
+
+        temp = []
+        for element in self.ctlFormulas:
+            if element not in del_items:
+                temp.append(element)
+
+        self.ctlFormulas = temp
 
         self.number_formulas = 0
 
         for i in range(len(self.ctlFormulas)):
-            self.ctl_Checkboxes.append(tk.Checkbutton(master=self.ctl_frame, text=self.ctlFormulas[i]['formula'], variable=self.ctlFormulas[i]['variable']))
-            self.ctl_Checkboxes[self.number_formulas].grid(column=0,row=2+self.number_formulas,columnspan=3,sticky="w")
+            self.ctl_Checkboxes.append(tk.Checkbutton(master=self.formula_frame, text=self.ctlFormulas[i]['formula'],
+                                                      variable=self.ctlFormulas[i]['variable']))
+            self.ctl_Checkboxes[self.number_formulas].grid(column=0, row=self.number_formulas, sticky="w")
 
-            self.ctl_states.append(tk.Label(self.ctl_frame, text=str(self.ctlFormulas[i]['states'])))
-            self.ctl_states[self.number_formulas].grid(column=3,row=2+self.number_formulas,sticky="w")
+            self.ctl_states.append(tk.Label(self.formula_frame, text=str(self.ctlFormulas[i]['states'])))
+            self.ctl_states[self.number_formulas].grid(column=1, row=self.number_formulas, sticky="w")
 
             self.number_formulas += 1
-        
+
 
 
 if __name__ == "__main__":
