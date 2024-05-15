@@ -58,10 +58,8 @@ class mcGUI(object):
         self.ap_frame = tk.Frame(self.root, width=450, height=250)
         self.ap_frame.grid_propagate(0)
 
-        rows_count = list(range(4+3)) # initially 3 empty rows of the AP table are loaded
-
-        self.ap_frame.columnconfigure(index=[0,1],weight=1)
-        self.ap_frame.rowconfigure(index=rows_count,weight=2)
+        self.ap_frame.columnconfigure(index=[0,1], weight=1)
+        self.ap_frame.rowconfigure(index=[0,1,2], weight=2)
 
         ap_headline = tk.Label(self.ap_frame, text="Manage APs", borderwidth=2, relief="groove")
         ap_headline.grid(column=0,row=0,columnspan=2,sticky="nsew")
@@ -69,25 +67,41 @@ class mcGUI(object):
         self.editAP_button = tk.Button(master=self.ap_frame, text="Edit", command=self.editAP)
         self.editAP_button.grid(column=0,row=1,sticky="nw")
 
-        states_table = tk.Label(self.ap_frame, text="State", borderwidth=1, relief="solid")
-        states_table.grid(column=0,row=2,sticky="nsew")
+        self.ap_canvas = tk.Canvas(self.ap_frame, width=430, height=155)
+        self.ap_canvas.grid(column=0, row=2, columnspan=2, sticky="nws")
 
-        ap_table = tk.Label(self.ap_frame, text="Atomic Proposition", borderwidth=1, relief="solid")
-        ap_table.grid(column=1,row=2,sticky="nsew")
+        self.table_frame = tk.Frame(self.ap_canvas, bg='green')
+        self.ap_canvas.create_window((0,0), window=self.table_frame, anchor="nw", tags="table_frame")
+
+        self.ap_scrollbar = tk.Scrollbar(self.ap_frame, orient="vertical", command=self.ap_canvas.yview)
+        self.ap_scrollbar.grid(column=1, row=2, sticky="nse")
+
+        states_table = tk.Label(self.table_frame, text="State", borderwidth=1, relief="solid")
+        states_table.grid(column=0,row=0,sticky="nsew")
+
+        ap_table = tk.Label(self.table_frame, text="Atomic Proposition", borderwidth=1, relief="solid")
+        ap_table.grid(column=1,row=0,sticky="nsew")
 
         self.ap_labels = []
         self.ap_entrys = []
         self.state_labels = []
         state_count = 0
 
-        for s in range(4): # see update_ap_frame()
-            state_label = tk.Label(self.ap_frame, text="", borderwidth=1, relief="solid")
-            state_label.grid(column=0,row=3+state_count,sticky="nsew")
+        for s in range(5): # see update_ap_frame()
+            state_label = tk.Label(self.table_frame, text="", borderwidth=1, relief="solid")
+            state_label.grid(column=0,row=1+state_count,sticky="nsew")
 
-            self.ap_labels.append(tk.Label(self.ap_frame, text="", borderwidth=1, relief="solid"))
-            self.ap_labels[state_count].grid(column=1,row=3+state_count,sticky="nsew")
+            self.ap_labels.append(tk.Label(self.table_frame, text="", borderwidth=1, relief="solid"))
+            self.ap_labels[state_count].grid(column=1,row=1+state_count,sticky="nsew")
 
             state_count += 1
+        
+        row_count = self.table_frame.grid_size()[1]
+        self.table_frame.columnconfigure(index=[0,1], minsize=215)
+        self.table_frame.rowconfigure(index=list(range(row_count)), minsize=25)
+
+        self.table_frame.update_idletasks()
+        self.ap_canvas.configure(yscrollcommand=self.ap_scrollbar.set, scrollregion=self.ap_canvas.bbox("all"))
 
 
     def create_ctl_frame(self):
@@ -122,7 +136,7 @@ class mcGUI(object):
         self.formula_canvas.create_window((0,0), window=self.formula_frame, anchor="nw", tags="formula_frame")
 
         self.formula_scrollbar = tk.Scrollbar(self.ctl_frame, orient="vertical", command=self.formula_canvas.yview)
-        self.formula_scrollbar.grid(column=3, row=2, sticky="ns")
+        self.formula_scrollbar.grid(column=3, row=2, sticky="nse")
 
         self.formula_frame.update_idletasks()
         self.formula_canvas.configure(yscrollcommand=self.formula_scrollbar.set, scrollregion=self.formula_canvas.bbox("all"))
@@ -172,23 +186,26 @@ class mcGUI(object):
 
 
     def update_ap_frame(self):
-        rows_count = list(range(len(self.machine.states.items())+3))
-        self.ap_frame.rowconfigure(index=rows_count,weight=2)
 
         state_count = 0
 
         for s in self.machine.states.items():
             current_name = s[0]
-            self.state_labels.append(tk.Label(self.ap_frame, text=f"{current_name}", borderwidth=1, relief="solid"))
-            self.state_labels[state_count].grid(column=0,row=3+state_count,sticky="nsew")
+            self.state_labels.append(tk.Label(self.table_frame, text=f"{current_name}", borderwidth=1, relief="solid"))
+            self.state_labels[state_count].grid(column=0,row=1+state_count,sticky="nsew")
 
             current_ap = s[1].tags
             ap_tags = ', '.join(current_ap)
-            self.ap_labels.append(tk.Label(self.ap_frame, text=ap_tags, borderwidth=1, relief="solid"))
-            self.ap_labels[state_count].grid(column=1,row=3+state_count,sticky="nsew")
+            self.ap_labels.append(tk.Label(self.table_frame, text=ap_tags, borderwidth=1, relief="solid"))
+            self.ap_labels[state_count].grid(column=1,row=1+state_count,sticky="nsew")
 
             state_count += 1
 
+        row_count = self.table_frame.grid_size()[1]
+        self.table_frame.rowconfigure(index=list(range(row_count)), minsize=25)
+
+        self.table_frame.update_idletasks()
+        self.ap_canvas.configure(yscrollcommand=self.ap_scrollbar.set, scrollregion=self.ap_canvas.bbox("all"))
 
     def clear_aplabels(self):
         for i in range(len(self.ap_labels)):
@@ -227,9 +244,9 @@ class mcGUI(object):
                 current_ap = s[1].tags
                 ap_tags = ','.join(current_ap)
 
-            self.ap_entrys.append(tk.Entry(self.ap_frame, borderwidth=1, relief="solid"))
+            self.ap_entrys.append(tk.Entry(self.table_frame, borderwidth=1, relief="solid"))
             self.ap_entrys[state_count].insert(10,ap_tags)
-            self.ap_entrys[state_count].grid(column=1,row=3+state_count,sticky="nsew")
+            self.ap_entrys[state_count].grid(column=1,row=1+state_count,sticky="nsew")
 
             state_count += 1
 
@@ -244,10 +261,10 @@ class mcGUI(object):
         for s in self.states:
             current_ap = self.ap_entrys[state_count].get()
             self.ap_entrys[state_count].destroy()
-            self.ap_labels.append(tk.Label(self.ap_frame, text=current_ap, borderwidth=1, relief="solid"))
-            self.ap_labels[state_count].grid(column=1,row=3+state_count,sticky="nsew")
+            self.ap_labels.append(tk.Label(self.table_frame, text=current_ap, borderwidth=1, relief="solid"))
+            self.ap_labels[state_count].grid(column=1,row=1+state_count,sticky="nsew")
 
-            s['tags'] = current_ap.split(",")
+            s['tags'] = current_ap.split(", ")
 
             state_count += 1
 
@@ -309,30 +326,6 @@ class mcGUI(object):
                 self.ctl_Checkboxes[i].config(bg='lightgreen')
             else:
                 self.ctl_Checkboxes[i].config(bg='darksalmon')
-        
-
-
-        # to visualize what checking could look like, actual model checking algorithm not yet implemented
-        """for s in self.states:
-            if s["name"] != "Login":
-                self.machine.model_graphs[id(self.kts)].set_node_style(s["name"], 'sat')
-            else:
-                self.machine.model_graphs[id(self.kts)].set_node_style(s["name"], 'unsat')
-
-        self.machine.generate_image(self.kts)
-        self.update_image()
-
-        self.ctl1.config(bg="lightgreen")
-        self.ctl2.config(bg="darksalmon")
-        self.ctl3.config(bg="lightgreen")
-
-        self.s1.config(bg="lightgreen")
-        self.s2.config(bg="darksalmon")
-        self.s3.config(bg="lightgreen")
-
-        self.ctl1bg.config(bg="lightgreen")
-        self.ctl2bg.config(bg="darksalmon")
-        self.ctl3bg.config(bg="lightgreen")"""
 
 
     def openCTLwindow(self):
