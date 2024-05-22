@@ -4,6 +4,7 @@ import modifiedTransitions as MT
 from tkinter import filedialog as fd
 from aux_functions import read_xml
 from mc_algorithm import *
+import json
 
 
 class mcGUI(object):
@@ -23,8 +24,8 @@ class mcGUI(object):
 
         filemenu = tk.Menu(menubar, tearoff=0)
         filemenu.add_command(label="Import", command=self.import_kts)
-        filemenu.add_command(label="Save")
-        filemenu.add_command(label="Load")
+        filemenu.add_command(label="Save", command=self.save_progress)
+        filemenu.add_command(label="Load", command=self.load)
         menubar.add_cascade(label="File", menu=filemenu)
 
         helpmenu = tk.Menu(menubar, tearoff=0)
@@ -246,7 +247,7 @@ class mcGUI(object):
 
             if s[1].tags != []:
                 current_ap = s[1].tags
-                ap_tags = ','.join(current_ap)
+                ap_tags = ', '.join(current_ap)
 
             self.ap_entrys.append(tk.Entry(self.table_frame, borderwidth=1, relief="solid"))
             self.ap_entrys[state_count].insert(10,ap_tags)
@@ -522,6 +523,76 @@ class mcGUI(object):
             self.ctl_states[self.number_formulas].grid(column=1,row=self.number_formulas*2,sticky="w")
 
             self.number_formulas += 1
+
+
+    def update_ctl_frame(self):
+        for i in range(len(self.ctl_Checkboxes)):
+            self.ctl_backgrounds[i].destroy()
+            self.ctl_Checkboxes[i].destroy()
+            self.ctl_states[i].destroy()
+            self.check_results[i].destroy()
+        
+        self.ctl_backgrounds.clear()
+        self.ctl_Checkboxes.clear()
+        self.ctl_states.clear()
+        self.check_results.clear()
+
+        self.number_formulas = 0
+
+        for i in range(len(self.ctlFormulas)):
+            self.ctl_backgrounds.append(tk.Label(self.formula_frame))
+            self.ctl_backgrounds[self.number_formulas].grid(column=0, row=self.number_formulas*2, columnspan=2, sticky="nwes")
+
+            self.ctl_Checkboxes.append(tk.Checkbutton(master=self.formula_frame, text=self.ctlFormulas[i]['formula'],
+                                                      variable=self.ctlFormulas[i]['variable'], wraplength=190))
+            self.ctl_Checkboxes[self.number_formulas].grid(column=0, row=self.number_formulas*2, sticky="w")
+
+            self.check_results.append(tk.Label(master=self.formula_frame, text='', wraplength=400))
+            self.check_results[self.number_formulas].grid(column=0, row=self.number_formulas*2 + 1, columnspan=2, sticky='w')
+
+            if len(self.ctlFormulas[i]['states']) == len(self.states):
+                self.ctl_states.append(tk.Label(self.formula_frame, text=str(['All'])))
+            else:
+                self.ctl_states.append(tk.Label(self.formula_frame, text=str(self.ctlFormulas[i]['states']), wraplength=190))
+            self.ctl_states[self.number_formulas].grid(column=1,row=self.number_formulas*2,sticky="w")
+
+            self.number_formulas += 1
+
+
+    def save_progress(self):
+
+        for element in self.ctlFormulas:
+            element['variable'] = element['variable'].get() # save value instead of IntVar Object
+
+        data = {'states': self.states, 'transitions': self.transitions, 'formulas': self.ctlFormulas}
+        with open('./saves/save1.json', 'w+') as f:
+            json.dump(data, f)
+
+        for i in range(len(self.ctlFormulas)):
+            self.ctlFormulas[i]['variable'] = tk.IntVar(value=int(element['variable'])) # transform back to IntVar
+            self.ctl_Checkboxes[i].config(variable=self.ctlFormulas[i]['variable'])
+    
+    
+    def load(self):
+        with open('./saves/save1.json') as f:
+            data = json.load(f)
+            self.states = data['states']
+            self.transitions = data['transitions']
+            self.ctlFormulas = data['formulas']
+        
+        self.kts = MT.KTS_model()
+        self.machine = MT.KTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states, transitions=self.transitions, show_state_attributes=True)
+        self.machine.generate_image(self.kts)
+        self.update_image()
+        self.clear_aplabels()
+        self.clear_statelabels()
+        self.clear_apentrys()
+        self.update_ap_frame()
+
+        for element in self.ctlFormulas:
+            element['variable'] = tk.IntVar(value=int(element['variable'])) # transform back to IntVar with saved value
+
+        self.update_ctl_frame()
 
 
 
