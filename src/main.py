@@ -246,7 +246,7 @@ class mcGUI(object):
 
             if s[1].tags != []:
                 current_ap = s[1].tags
-                ap_tags = ','.join(current_ap)
+                ap_tags = ', '.join(current_ap)
 
             self.ap_entrys.append(tk.Entry(self.table_frame, borderwidth=1, relief="solid"))
             self.ap_entrys[state_count].insert(10,ap_tags)
