@@ -461,7 +461,34 @@ class mcGUI(object):
 
 
     def openEditWindow(self):
-        pass
+        self.editWindow = tk.Toplevel(self.root)
+        self.editWindow.title("Edit CTL Formula")
+        self.editWindow.geometry("400x300")
+        self.editWindow.rowconfigure(index=[0],weight=1)
+        self.editWindow.columnconfigure(index=[0],weight=1)
+
+        formula_label = tk.Label(self.editWindow, text="Choose Formula to be edited:")     
+        formula_label.grid(column=0, row=0, sticky="nw")
+
+        con_editWindow = tk.Button(self.editWindow, text="Continue")
+        con_editWindow.grid(column=0, row=2)
+
+        editCanvas = tk.Canvas(self.editWindow, height=250, width=100)
+        editCanvas.grid(column=0, row=1, sticky="nsew")
+        editFrame = tk.Frame(editCanvas)
+
+        editCanvas.create_window((0,0), window=editFrame, anchor="nw", tags="editFrame")
+
+        self.chosen_variable = tk.IntVar()
+
+        for i in range(len(self.ctlFormulas)):
+            formula_radio = tk.Radiobutton(master=editFrame, text=self.ctlFormulas[i]['formula'], variable=self.chosen_variable, value=i)
+            formula_radio.grid(column=0, row=i, sticky="nw")
+
+        editScrollbar = tk.Scrollbar(self.editWindow, orient="vertical", command=editCanvas.yview)
+        editScrollbar.grid(column=1, row=1, sticky="ns")
+        editFrame.update_idletasks()
+        editCanvas.configure(yscrollcommand=editScrollbar.set, scrollregion=editCanvas.bbox("all"))
 
 
     def openDelWindow(self):
