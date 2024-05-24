@@ -24,9 +24,12 @@ class mcGUI(object):
 
         filemenu = tk.Menu(menubar, tearoff=0)
         filemenu.add_command(label="Import", command=self.import_kts)
+        filemenu.add_command(label="Save as", command=self.save_as)
         filemenu.add_command(label="Save", command=self.save_progress)
         filemenu.add_command(label="Load", command=self.load)
         menubar.add_cascade(label="File", menu=filemenu)
+
+        self.saveasPath = ''
 
         helpmenu = tk.Menu(menubar, tearoff=0)
         helpmenu.add_command(label="About")
@@ -166,12 +169,13 @@ class mcGUI(object):
 
 
     def import_kts(self):
+
+        diagramPath = fd.askopenfilename(title='Select a State Machine Diagram', initialdir='./examples', filetypes=[('XML files', '*.xml')])
+
         self.clear_aplabels()
         self.clear_statelabels()
         self.clear_apentrys()
         self.clear_ctl_frame()
-
-        diagramPath = fd.askopenfilename(title='Select a State Machine Diagram', initialdir='./examples', filetypes=[('XML files', '*.xml')])
 
         self.states, self.transitions = read_xml(diagramPath)
 
@@ -542,22 +546,50 @@ class mcGUI(object):
             self.number_formulas += 1
 
 
-    def save_progress(self):
+    def save_as(self):
+        self.saveasPath = fd.asksaveasfilename(title='Select a file to save the model', initialdir='./saves',
+                                          filetypes=[('json', '*.json')], defaultextension='.json')
 
         for element in self.ctlFormulas:
             element['variable'] = element['variable'].get() # save value instead of IntVar Object
 
         data = {'states': self.states, 'transitions': self.transitions, 'formulas': self.ctlFormulas}
-        with open('./saves/save1.json', 'w+') as f:
+
+        with open(self.saveasPath, 'w+') as f:
             json.dump(data, f)
 
         for i in range(len(self.ctlFormulas)):
             self.ctlFormulas[i]['variable'] = tk.IntVar(value=int(element['variable'])) # transform back to IntVar
             self.ctl_Checkboxes[i].config(variable=self.ctlFormulas[i]['variable'])
+        
+        self.root.title(f"Modelchecker - {self.saveasPath}")
+
+
+    def save_progress(self):
+
+        if self.saveasPath == '':
+            self.save_as()
+        
+        else:
+
+            for element in self.ctlFormulas:
+                element['variable'] = element['variable'].get() # save value instead of IntVar Object
+
+            data = {'states': self.states, 'transitions': self.transitions, 'formulas': self.ctlFormulas}
+
+            with open(self.saveasPath, 'w+') as f:
+                json.dump(data, f)
+
+            for i in range(len(self.ctlFormulas)):
+                self.ctlFormulas[i]['variable'] = tk.IntVar(value=int(element['variable'])) # transform back to IntVar
+                self.ctl_Checkboxes[i].config(variable=self.ctlFormulas[i]['variable'])
     
     
     def load(self):
-        with open('./saves/save1.json') as f:
+
+        self.saveasPath = fd.askopenfilename(title='Select a file to load a model', initialdir='./saves', filetypes=[('json', '*.json')])
+
+        with open(self.saveasPath) as f:
             data = json.load(f)
             self.states = data['states']
             self.transitions = data['transitions']
@@ -574,6 +606,8 @@ class mcGUI(object):
             element['variable'] = tk.IntVar(value=int(element['variable'])) # transform back to IntVar with saved value
 
         self.update_ctl_frame()
+
+        self.root.title(f"Modelchecker - {self.saveasPath}")
 
 
 
