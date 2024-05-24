@@ -4,6 +4,7 @@ import modifiedTransitions as MT
 from tkinter import filedialog as fd
 from aux_functions import read_xml
 from mc_algorithm import *
+import json
 
 
 class mcGUI(object):
@@ -23,9 +24,12 @@ class mcGUI(object):
 
         filemenu = tk.Menu(menubar, tearoff=0)
         filemenu.add_command(label="Import", command=self.import_kts)
-        filemenu.add_command(label="Save")
-        filemenu.add_command(label="Load")
+        filemenu.add_command(label="Save as", command=self.save_as)
+        filemenu.add_command(label="Save", command=self.save_progress)
+        filemenu.add_command(label="Load", command=self.load)
         menubar.add_cascade(label="File", menu=filemenu)
+
+        self.saveasPath = ''
 
         helpmenu = tk.Menu(menubar, tearoff=0)
         helpmenu.add_command(label="About")
@@ -70,7 +74,7 @@ class mcGUI(object):
         self.ap_canvas = tk.Canvas(self.ap_frame, width=430, height=155)
         self.ap_canvas.grid(column=0, row=2, columnspan=2, sticky="nws")
 
-        self.table_frame = tk.Frame(self.ap_canvas, bg='green')
+        self.table_frame = tk.Frame(self.ap_canvas)
         self.ap_canvas.create_window((0,0), window=self.table_frame, anchor="nw", tags="table_frame")
 
         self.ap_scrollbar = tk.Scrollbar(self.ap_frame, orient="vertical", command=self.ap_canvas.yview)
@@ -88,8 +92,8 @@ class mcGUI(object):
         state_count = 0
 
         for s in range(5): # see update_ap_frame()
-            state_label = tk.Label(self.table_frame, text="", borderwidth=1, relief="solid")
-            state_label.grid(column=0,row=1+state_count,sticky="nsew")
+            self.state_labels.append(tk.Label(self.table_frame, text="", borderwidth=1, relief="solid"))
+            self.state_labels[state_count].grid(column=0,row=1+state_count,sticky="nsew")
 
             self.ap_labels.append(tk.Label(self.table_frame, text="", borderwidth=1, relief="solid"))
             self.ap_labels[state_count].grid(column=1,row=1+state_count,sticky="nsew")
@@ -165,18 +169,26 @@ class mcGUI(object):
 
 
     def import_kts(self):
+
         diagramPath = fd.askopenfilename(title='Select a State Machine Diagram', initialdir='./examples', filetypes=[('XML files', '*.xml')])
+
+        self.clear_aplabels()
+        self.clear_statelabels()
+        self.clear_apentrys()
+        self.clear_ctl_frame()
 
         self.states, self.transitions = read_xml(diagramPath)
 
         self.kts = MT.KTS_model()
-        self.machine = MT.KTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states, transitions=self.transitions, show_state_attributes=True)
+        self.machine = MT.KTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
+                              transitions=self.transitions, show_state_attributes=True)
         self.machine.generate_image(self.kts)
         self.update_image()
-        self.clear_aplabels() # clear any existing labels of the table
-        self.clear_statelabels()
-        self.clear_apentrys()
         self.update_ap_frame()
+        self.update_ctl_frame()
+
+        self.table_frame.update_idletasks()
+        self.ap_canvas.configure(yscrollcommand=self.ap_scrollbar.set, scrollregion=self.ap_canvas.bbox("all"))
 
 
     def update_image(self):
@@ -190,6 +202,9 @@ class mcGUI(object):
 
 
     def update_ap_frame(self):
+        self.clear_aplabels()
+        self.clear_statelabels()
+        self.clear_apentrys()
 
         state_count = 0
 
@@ -213,21 +228,21 @@ class mcGUI(object):
 
     def clear_aplabels(self):
         for i in range(len(self.ap_labels)):
-            self.ap_labels[i].destroy
+            self.ap_labels[i].destroy()
         
         self.ap_labels.clear()
 
 
     def clear_statelabels(self):
         for i in range(len(self.state_labels)):
-            self.state_labels[i].destroy
+            self.state_labels[i].destroy()
         
         self.state_labels.clear()
 
 
     def clear_apentrys(self):
         for i in range(len(self.ap_entrys)):
-            self.ap_entrys[i].destroy
+            self.ap_entrys[i].destroy()
         
         self.ap_entrys.clear()
 
@@ -274,7 +289,8 @@ class mcGUI(object):
 
         self.clear_apentrys()
         self.kts = MT.KTS_model()
-        self.machine = MT.KTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states, transitions=self.transitions, show_state_attributes=True)
+        self.machine = MT.KTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
+                              transitions=self.transitions, show_state_attributes=True)
         self.machine.generate_image(self.kts)
         self.update_image()
 
@@ -478,17 +494,6 @@ class mcGUI(object):
         
         self.delWindow.destroy()
 
-        for i in range(len(self.ctl_Checkboxes)):
-            self.ctl_backgrounds[i].destroy()
-            self.ctl_Checkboxes[i].destroy()
-            self.ctl_states[i].destroy()
-            self.check_results[i].destroy()
-        
-        self.ctl_backgrounds.clear()
-        self.ctl_Checkboxes.clear()
-        self.ctl_states.clear()
-        self.check_results.clear()
-
         del_items = []
 
         for i in range(len(self.ctlFormulas)):
@@ -501,6 +506,23 @@ class mcGUI(object):
                 temp.append(element)
 
         self.ctlFormulas = temp
+
+        self.update_ctl_frame()
+
+    def clear_ctl_frame(self):
+        for i in range(len(self.ctl_Checkboxes)):
+            self.ctl_backgrounds[i].destroy()
+            self.ctl_Checkboxes[i].destroy()
+            self.ctl_states[i].destroy()
+            self.check_results[i].destroy()
+        
+        self.ctl_backgrounds.clear()
+        self.ctl_Checkboxes.clear()
+        self.ctl_states.clear()
+        self.check_results.clear()
+
+    def update_ctl_frame(self):
+        self.clear_ctl_frame()
 
         self.number_formulas = 0
 
@@ -522,6 +544,70 @@ class mcGUI(object):
             self.ctl_states[self.number_formulas].grid(column=1,row=self.number_formulas*2,sticky="w")
 
             self.number_formulas += 1
+
+
+    def save_as(self):
+        self.saveasPath = fd.asksaveasfilename(title='Select a file to save the model', initialdir='./saves',
+                                          filetypes=[('json', '*.json')], defaultextension='.json')
+
+        for element in self.ctlFormulas:
+            element['variable'] = element['variable'].get() # save value instead of IntVar Object
+
+        data = {'states': self.states, 'transitions': self.transitions, 'formulas': self.ctlFormulas}
+
+        with open(self.saveasPath, 'w+') as f:
+            json.dump(data, f)
+
+        for i in range(len(self.ctlFormulas)):
+            self.ctlFormulas[i]['variable'] = tk.IntVar(value=int(element['variable'])) # transform back to IntVar
+            self.ctl_Checkboxes[i].config(variable=self.ctlFormulas[i]['variable'])
+        
+        self.root.title(f"Modelchecker - {self.saveasPath}")
+
+
+    def save_progress(self):
+
+        if self.saveasPath == '':
+            self.save_as()
+        
+        else:
+
+            for element in self.ctlFormulas:
+                element['variable'] = element['variable'].get() # save value instead of IntVar Object
+
+            data = {'states': self.states, 'transitions': self.transitions, 'formulas': self.ctlFormulas}
+
+            with open(self.saveasPath, 'w+') as f:
+                json.dump(data, f)
+
+            for i in range(len(self.ctlFormulas)):
+                self.ctlFormulas[i]['variable'] = tk.IntVar(value=int(element['variable'])) # transform back to IntVar
+                self.ctl_Checkboxes[i].config(variable=self.ctlFormulas[i]['variable'])
+    
+    
+    def load(self):
+
+        self.saveasPath = fd.askopenfilename(title='Select a file to load a model', initialdir='./saves', filetypes=[('json', '*.json')])
+
+        with open(self.saveasPath) as f:
+            data = json.load(f)
+            self.states = data['states']
+            self.transitions = data['transitions']
+            self.ctlFormulas = data['formulas']
+        
+        self.kts = MT.KTS_model()
+        self.machine = MT.KTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
+                              transitions=self.transitions, show_state_attributes=True)
+        self.machine.generate_image(self.kts)
+        self.update_image()
+        self.update_ap_frame()
+
+        for element in self.ctlFormulas:
+            element['variable'] = tk.IntVar(value=int(element['variable'])) # transform back to IntVar with saved value
+
+        self.update_ctl_frame()
+
+        self.root.title(f"Modelchecker - {self.saveasPath}")
 
 
 
