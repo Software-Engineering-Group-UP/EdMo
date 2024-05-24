@@ -112,29 +112,32 @@ class mcGUI(object):
         self.ctl_frame = tk.Frame(self.root, width=450, height=250)
         self.ctl_frame.grid_propagate(0)
 
-        self.ctl_frame.columnconfigure(index=[0,1,2,3],weight=1)
-        self.ctl_frame.columnconfigure(index=[0,1,2],minsize=110)
-        self.ctl_frame.rowconfigure(index=[0,1,2],weight=2)
+        self.ctl_frame.columnconfigure(index=[0,1,2,3,4],weight=1)
+        self.ctl_frame.columnconfigure(index=[0,1,2,3],minsize=83)
+        self.ctl_frame.rowconfigure(index=[0,1,2,3],weight=2)
 
         ctl_label = tk.Label(self.ctl_frame, text="Manage CTL-Formulas", borderwidth=2, relief="groove")
-        ctl_label.grid(column=0,row=0,columnspan=4,sticky="nsew")
+        ctl_label.grid(column=0,row=0,columnspan=5,sticky="nsew")
 
         self.defaultbg = ctl_label.cget('bg')
 
-        editCTL_button = tk.Button(master=self.ctl_frame, text="Add", command=self.openCTLwindow)
-        editCTL_button.grid(column=0,row=1,sticky="nw")
+        addCTL_button = tk.Button(master=self.ctl_frame, text="Add", command=self.openCTLwindow)
+        addCTL_button.grid(column=0,row=1,sticky="nw")
+
+        editCTL_button = tk.Button(master=self.ctl_frame, text="Edit", command=self.openEditWindow)
+        editCTL_button.grid(column=1, row=1, sticky="nw")
 
         self.delete_button = tk.Button(master=self.ctl_frame, text="Delete", command=self.openDelWindow)
-        self.delete_button.grid(column=1,row=1,sticky="nw")
+        self.delete_button.grid(column=2,row=1,sticky="nw")
 
         self.description_button = tk.Button(master=self.ctl_frame, text="Description", command=self.showDescription)
-        self.description_button.grid(column=2,row=1,sticky="nw")
+        self.description_button.grid(column=3,row=1,sticky="nw")
 
         check_button = tk.Button(master=self.ctl_frame, text="Check", command=self.checkModel)
-        check_button.grid(column=3,row=1,sticky="ne")
+        check_button.grid(column=4,row=1,sticky="ne")
 
         self.formula_canvas = tk.Canvas(self.ctl_frame, width=400, height=155)
-        self.formula_canvas.grid(column=0, row=2, columnspan=3, sticky="nws")
+        self.formula_canvas.grid(column=0, row=2, columnspan=4, sticky="nws")
 
         self.formula_frame = tk.Frame(self.formula_canvas)
         self.formula_canvas.create_window((0,0), window=self.formula_frame, anchor="nw", tags="formula_frame")
@@ -142,7 +145,7 @@ class mcGUI(object):
         self.formula_frame.columnconfigure(index=[1], minsize=400)
 
         self.formula_scrollbar = tk.Scrollbar(self.ctl_frame, orient="vertical", command=self.formula_canvas.yview)
-        self.formula_scrollbar.grid(column=3, row=2, sticky="nse")
+        self.formula_scrollbar.grid(column=4, row=2, sticky="nse")
 
         self.formula_frame.update_idletasks()
         self.formula_canvas.configure(yscrollcommand=self.formula_scrollbar.set, scrollregion=self.formula_canvas.bbox("all"))
@@ -457,6 +460,10 @@ class mcGUI(object):
             self.ctlWindow.destroy()
 
 
+    def openEditWindow(self):
+        pass
+
+
     def openDelWindow(self):
         self.delWindow = tk.Toplevel(self.root)
         self.delWindow.title("Delete CTL Formulas")
@@ -508,6 +515,7 @@ class mcGUI(object):
         self.ctlFormulas = temp
 
         self.update_ctl_frame()
+
 
     def clear_ctl_frame(self):
         for i in range(len(self.ctl_Checkboxes)):
