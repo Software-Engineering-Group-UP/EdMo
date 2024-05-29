@@ -121,7 +121,7 @@ class mcGUI(object):
 
         self.defaultbg = ctl_label.cget('bg')
 
-        addCTL_button = tk.Button(master=self.ctl_frame, text="Add", command=self.openCTLwindow)
+        addCTL_button = tk.Button(master=self.ctl_frame, text="Add", command=lambda: self.openCTLwindow())
         addCTL_button.grid(column=0,row=1,sticky="nw")
 
         editCTL_button = tk.Button(master=self.ctl_frame, text="Edit", command=self.openEditWindow)
@@ -301,7 +301,7 @@ class mcGUI(object):
     def showDescription(self):
         self.description_button.destroy()
         self.formula_button = tk.Button(master=self.ctl_frame, text="Formula", command=self.showFormula)
-        self.formula_button.grid(column=2,row=1,sticky="nw")
+        self.formula_button.grid(column=3,row=1,sticky="nw")
 
         for i in range(len(self.ctlFormulas)):
             self.ctl_Checkboxes[i].config(text=self.ctlFormulas[i]['description'])
@@ -310,7 +310,7 @@ class mcGUI(object):
     def showFormula(self):
         self.formula_button.destroy()
         self.description_button = tk.Button(master=self.ctl_frame, text="Description", command=self.showDescription)
-        self.description_button.grid(column=2,row=1,sticky="nw")
+        self.description_button.grid(column=3,row=1,sticky="nw")
 
         for i in range(len(self.ctlFormulas)):
             self.ctl_Checkboxes[i].config(text=self.ctlFormulas[i]['formula'])
@@ -364,7 +364,7 @@ class mcGUI(object):
         self.formula_canvas.configure(yscrollcommand=self.formula_scrollbar.set, scrollregion=self.formula_canvas.bbox("all"))
 
 
-    def openCTLwindow(self):
+    def openCTLwindow(self, formula_number=None):
 
         self.ctlWindow = tk.Toplevel(self.root)
         self.ctlWindow.title("Create CTL Formula")
@@ -376,6 +376,8 @@ class mcGUI(object):
         formula_label.grid(column=0, row=0, sticky="e")
 
         self.formula_entry = tk.Entry(self.ctlWindow)
+        if formula_number != None:
+            self.formula_entry.insert(10, self.ctlFormulas[formula_number]['formula'])
         self.formula_entry.grid(column=1, row=0, sticky="w")
 
         self.ctlError_label = tk.Label(self.ctlWindow, text="")
@@ -385,12 +387,17 @@ class mcGUI(object):
         description_label.grid(column=0, row=2, sticky="e")
 
         self.description_entry = tk.Entry(self.ctlWindow)
+        if formula_number != None:
+            self.description_entry.insert(10, self.ctlFormulas[formula_number]['description'])
         self.description_entry.grid(column=1, row=2, sticky="w")
 
         states_label = tk.Label(self.ctlWindow, text="Pick states for the formula:")
         states_label.grid(column=0, row=3, sticky="ne")
 
-        done_CTLwindow = tk.Button(self.ctlWindow, text="Done", command=self.saveCTL)
+        if formula_number != None:
+            done_CTLwindow = tk.Button(self.ctlWindow, text="Done", command=self.saveEdit)
+        else:
+            done_CTLwindow = tk.Button(self.ctlWindow, text="Done", command=self.saveCTL)
         done_CTLwindow.grid(column=0, row=4, columnspan=3)
 
         self.canvas = tk.Canvas(self.ctlWindow, width=150, height=150) # canvas to add scrollbar
@@ -403,10 +410,15 @@ class mcGUI(object):
         state_count = 0
 
         self.check_vars = []
-        for v in range(len(self.states)):
-            self.check_vars.append(tk.IntVar(value=1))
-        
         for s in self.states:
+            if formula_number == None:
+                self.check_vars.append(tk.IntVar(value=1))
+            else:
+                if s['name'] in self.ctlFormulas[formula_number]['states']:
+                    self.check_vars.append(tk.IntVar(value=1))
+                else:
+                    self.check_vars.append(tk.IntVar(value=0))
+        
             current_state = s['name']
             tk.Checkbutton(master=frame, text=current_state, variable=self.check_vars[state_count]).grid(column=0, row=state_count, sticky="w")
             state_count += 1
@@ -470,7 +482,7 @@ class mcGUI(object):
         formula_label = tk.Label(self.editWindow, text="Choose Formula to be edited:")     
         formula_label.grid(column=0, row=0, sticky="nw")
 
-        con_editWindow = tk.Button(self.editWindow, text="Continue")
+        con_editWindow = tk.Button(self.editWindow, text="Continue", command=self.editFormula)
         con_editWindow.grid(column=0, row=2)
 
         editCanvas = tk.Canvas(self.editWindow, height=250, width=100)
@@ -489,6 +501,41 @@ class mcGUI(object):
         editScrollbar.grid(column=1, row=1, sticky="ns")
         editFrame.update_idletasks()
         editCanvas.configure(yscrollcommand=editScrollbar.set, scrollregion=editCanvas.bbox("all"))
+    
+    def editFormula(self):
+        self.formula_number = self.chosen_variable.get()
+        self.editWindow.destroy()
+        self.openCTLwindow(formula_number=self.formula_number)
+    
+    
+    def saveEdit(self):
+        try:
+            mc_parse(self.formula_entry.get())
+        except Exception as error:
+            self.ctlError_label.config(text=error)
+        else:
+            checked_states = []
+
+            for i in range(len(self.states)):
+                if self.check_vars[i].get() == 1:
+                    checked_states.append(self.states[i]['name'])
+            
+            self.ctlFormulas[self.formula_number]['formula'] = self.formula_entry.get()
+            self.ctlFormulas[self.formula_number]['description'] = self.description_entry.get()
+            self.ctlFormulas[self.formula_number]['states'] = checked_states
+
+            self.ctl_Checkboxes[self.formula_number].config(text=self.formula_entry.get())
+
+            if len(checked_states) == len(self.states):
+                self.ctl_states[self.formula_number].config(text=str(['All']))
+            else:
+                self.ctl_states[self.formula_number].config(text=str(checked_states))
+
+            
+            self.formula_frame.update_idletasks()
+            self.formula_canvas.configure(yscrollcommand=self.formula_scrollbar.set, scrollregion=self.formula_canvas.bbox("all"))
+
+            self.ctlWindow.destroy()
 
 
     def openDelWindow(self):
