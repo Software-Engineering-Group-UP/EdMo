@@ -55,6 +55,9 @@ class mcGUI(object):
         self.create_graph_frame()
         self.graph_frame.grid(column=1,row=0,rowspan=2, sticky="nsew", padx=5, pady=5)
 
+        self.imscale = 1.0  # scale for the canvaas image
+        self.delta = 1.3  # zoom magnitude
+
         self.root.mainloop()
 
 
@@ -167,8 +170,14 @@ class mcGUI(object):
         graph_label = tk.Label(self.graph_frame, text="Model", borderwidth=2, relief="groove")
         graph_label.grid(column=0,row=0,sticky="nsew")
 
-        self.graph_display = tk.Label(self.graph_frame, text="no diagram loaded", height=29)
-        self.graph_display.grid(column=0,row=1,sticky="nsew")
+        self.graph_canvas = tk.Canvas(self.graph_frame, width=1000, height=450)
+        self.graph_canvas.grid(column=0,row=1,sticky="nw")
+
+        #self.nodiagram_label = tk.Label(self.graph_canvas, text="no diagram loaded", height=29)
+        #self.nodiagram_label.grid(column=0,row=0,sticky="nsew")
+
+        self.graph_canvas.bind('<ButtonPress-1>', self.move_from)
+        self.graph_canvas.bind('<B1-Motion>', self.move_to)
 
 
     def import_kts(self):
@@ -195,13 +204,20 @@ class mcGUI(object):
 
 
     def update_image(self):
-        img = Image.open("src/kts.png")
-        width, height = img.size
-        resized_img = img.resize((950,int(height*(950/width))))
-        self.graph_image = ImageTk.PhotoImage(resized_img)
-        self.graph_display = tk.Label(self.graph_frame, image=self.graph_image, height=250)
-        self.graph_display.image = self.graph_image
-        self.graph_display.grid(column=0,row=1,sticky="nsew")
+
+        self.image = Image.open("src/kts.png")
+        self.width, self.height = self.image.size
+        self.graph_image = ImageTk.PhotoImage(self.image)
+        self.graph_canvas.create_image(0, 0, image=self.graph_image, anchor="nw")
+        self.container = self.graph_canvas.create_rectangle(0, 0, self.width, self.height, width=0)
+        self.graph_canvas.configure(scrollregion=self.graph_canvas.bbox(self.container)) 
+
+        
+    def move_from(self, event):
+        self.graph_canvas.scan_mark(event.x, event.y)
+
+    def move_to(self, event):
+        self.graph_canvas.scan_dragto(event.x, event.y, gain=1)
 
 
     def update_ap_frame(self):
@@ -283,7 +299,7 @@ class mcGUI(object):
         for s in self.states:
             current_ap = self.ap_entrys[state_count].get()
             self.ap_entrys[state_count].destroy()
-            self.ap_labels.append(tk.Label(self.table_frame, text=current_ap, borderwidth=1, relief="solid"))
+            self.ap_labels.append(tk.Label(self.table_frame, text=current_ap, borderwidth=1, relief="solid", wraplength=150))
             self.ap_labels[state_count].grid(column=1,row=1+state_count,sticky="nsew")
 
             s['tags'] = current_ap.split(", ")
@@ -296,6 +312,9 @@ class mcGUI(object):
                               transitions=self.transitions, show_state_attributes=True)
         self.machine.generate_image(self.kts)
         self.update_image()
+
+        self.table_frame.update_idletasks()
+        self.ap_canvas.configure(yscrollcommand=self.ap_scrollbar.set, scrollregion=self.ap_canvas.bbox("all"))
 
 
     def showDescription(self):
