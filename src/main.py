@@ -179,6 +179,10 @@ class mcGUI(object):
         self.graph_canvas.bind('<ButtonPress-1>', self.move_from)
         self.graph_canvas.bind('<B1-Motion>', self.move_to)
 
+        self.graph_canvas.bind('<MouseWheel>', self.zoom) # windows, MacOS
+        self.graph_canvas.bind('<Button-4>', self.zoom) # Linux
+        self.graph_canvas.bind('<Button-5>', self.zoom)
+
 
     def import_kts(self):
 
@@ -195,7 +199,7 @@ class mcGUI(object):
         self.machine = MT.KTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
                               transitions=self.transitions, show_state_attributes=True)
         self.machine.generate_image(self.kts)
-        self.update_image()
+        self.set_new_image()
         self.update_ap_frame()
         self.update_ctl_frame()
 
@@ -203,21 +207,55 @@ class mcGUI(object):
         self.ap_canvas.configure(yscrollcommand=self.ap_scrollbar.set, scrollregion=self.ap_canvas.bbox("all"))
 
 
-    def update_image(self):
-
-        self.image = Image.open("src/kts.png")
-        self.width, self.height = self.image.size
+    def set_new_image(self):
+        self.original_image = Image.open("src/kts.png")
+        self.image = self.original_image
+        self.original_width, self.original_height = self.image.size
+        self.width = self.graph_canvas.winfo_width()
+        self.height = int(self.original_height * self.width // self.original_width)
+        self.image = self.original_image.resize((self.width, self.height))
         self.graph_image = ImageTk.PhotoImage(self.image)
-        self.graph_canvas.create_image(0, 0, image=self.graph_image, anchor="nw")
-        self.container = self.graph_canvas.create_rectangle(0, 0, self.width, self.height, width=0)
+        self.graph_canvas.create_image(500, 225, image=self.graph_image, anchor="center")
+        container_x = self.graph_canvas.winfo_width() // 2 - self.width // 2
+        container_y = self.graph_canvas.winfo_height() // 2 - self.height // 2
+        self.container = self.graph_canvas.create_rectangle(container_x, container_y, self.width, self.height, width=0)
+        self.graph_canvas.configure(scrollregion=self.graph_canvas.bbox(self.container)) 
+
+
+    def update_image(self):
+        self.original_image = Image.open("src/kts.png")
+        self.image = self.original_image
+        self.original_width, self.original_height = self.image.size
+        self.image = self.original_image.resize((self.width, self.height))
+        self.graph_image = ImageTk.PhotoImage(self.image)
+        self.graph_canvas.create_image(500, 225, image=self.graph_image, anchor="center")
+        container_x = self.graph_canvas.winfo_width() // 2 - self.width // 2
+        container_y = self.graph_canvas.winfo_height() // 2 - self.height // 2
+        self.container = self.graph_canvas.create_rectangle(container_x, container_y, self.width, self.height, width=0)
         self.graph_canvas.configure(scrollregion=self.graph_canvas.bbox(self.container)) 
 
         
     def move_from(self, event):
         self.graph_canvas.scan_mark(event.x, event.y)
 
+
     def move_to(self, event):
         self.graph_canvas.scan_dragto(event.x, event.y, gain=1)
+        self.update_image()
+
+    
+    def zoom(self, event):
+        if event.delta == -120 or event.delta == -1 or event.num == 5:
+            self.width = int(self.width * 0.9)
+            self.height = int(self.height * 0.9)
+            self.image = self.original_image.resize((self.width, self.height))
+        
+        if event.delta == 120 or event.delta == 1 or event.num == 4:
+            self.width = int(self.width * 1.1)
+            self.height = int(self.height * 1.1)
+            self.image = self.original_image.resize((self.width, self.height))
+        
+        self.update_image()
 
 
     def update_ap_frame(self):
@@ -700,7 +738,7 @@ class mcGUI(object):
         self.machine = MT.KTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
                               transitions=self.transitions, show_state_attributes=True)
         self.machine.generate_image(self.kts)
-        self.update_image()
+        self.set_new_image()
         self.update_ap_frame()
 
         for element in self.ctlFormulas:
