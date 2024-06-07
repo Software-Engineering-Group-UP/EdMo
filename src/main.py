@@ -246,11 +246,15 @@ class mcGUI(object):
     
     def zoom(self, event):
         if event.delta == -120 or event.delta == -1 or event.num == 5:
+            if self.width / self.original_width < 0.4: # boundary for zoom out
+                return
             self.width = int(self.width * 0.9)
             self.height = int(self.height * 0.9)
             self.image = self.original_image.resize((self.width, self.height))
         
         if event.delta == 120 or event.delta == 1 or event.num == 4:
+            if self.width / self.original_width > 1.6: # boundary for zoom in
+                return
             self.width = int(self.width * 1.1)
             self.height = int(self.height * 1.1)
             self.image = self.original_image.resize((self.width, self.height))
