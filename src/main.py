@@ -170,11 +170,20 @@ class mcGUI(object):
         graph_label = tk.Label(self.graph_frame, text="Model", borderwidth=2, relief="groove")
         graph_label.grid(column=0,row=0,sticky="nsew")
 
-        self.graph_canvas = tk.Canvas(self.graph_frame, width=1000, height=450)
-        self.graph_canvas.grid(column=0,row=1,sticky="nw")
+        button_frame = tk.Frame(self.graph_frame)
+        button_frame.grid(column=0, row=1, sticky="we")
 
-        #self.nodiagram_label = tk.Label(self.graph_canvas, text="no diagram loaded", height=29)
-        #self.nodiagram_label.grid(column=0,row=0,sticky="nsew")
+        zoomIN_button = tk.Button(button_frame, text="+", command=lambda: self.zoom(zoom_value=1))
+        zoomIN_button.pack(side="left")
+
+        zoomOUT_button = tk.Button(button_frame, text="-", command=lambda: self.zoom(zoom_value=-1))
+        zoomOUT_button.pack(side="left")
+
+        reset_button = tk.Button(button_frame, text="Reset")
+        reset_button.pack(side="right")
+
+        self.graph_canvas = tk.Canvas(self.graph_frame, width=1000, height=450)
+        self.graph_canvas.grid(column=0,row=2,sticky="nw")
 
         self.graph_canvas.bind('<ButtonPress-1>', self.move_from)
         self.graph_canvas.bind('<B1-Motion>', self.move_to)
@@ -244,15 +253,21 @@ class mcGUI(object):
         self.update_image()
 
     
-    def zoom(self, event):
-        if event.delta == -120 or event.delta == -1 or event.num == 5:
+    def zoom(self, event=None, zoom_value=None):
+        if event != None:
+            if event.delta == -120 or event.delta == -1 or event.num == 5:
+                zoom_value=-1
+            if event.delta == 120 or event.delta == 1 or event.num == 4:
+                zoom_value=1
+
+        if zoom_value == -1:
             if self.width / self.original_width < 0.4: # boundary for zoom out
                 return
             self.width = int(self.width * 0.9)
             self.height = int(self.height * 0.9)
             self.image = self.original_image.resize((self.width, self.height))
         
-        if event.delta == 120 or event.delta == 1 or event.num == 4:
+        if zoom_value == 1:
             if self.width / self.original_width > 1.6: # boundary for zoom in
                 return
             self.width = int(self.width * 1.1)
