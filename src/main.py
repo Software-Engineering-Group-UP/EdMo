@@ -179,7 +179,7 @@ class mcGUI(object):
         zoomOUT_button = tk.Button(button_frame, text="-", command=lambda: self.zoom(zoom_value=-1))
         zoomOUT_button.pack(side="left")
 
-        reset_button = tk.Button(button_frame, text="Reset")
+        reset_button = tk.Button(button_frame, text="Reset", command=self.reset_markings)
         reset_button.pack(side="right")
 
         self.graph_canvas = tk.Canvas(self.graph_frame, width=1000, height=450)
@@ -241,7 +241,24 @@ class mcGUI(object):
         container_x = self.graph_canvas.winfo_width() // 2 - self.width // 2
         container_y = self.graph_canvas.winfo_height() // 2 - self.height // 2
         self.container = self.graph_canvas.create_rectangle(container_x, container_y, self.width, self.height, width=0)
-        self.graph_canvas.configure(scrollregion=self.graph_canvas.bbox(self.container)) 
+        self.graph_canvas.configure(scrollregion=self.graph_canvas.bbox(self.container))
+
+    
+    def reset_markings(self):
+        for s in self.states:
+            self.machine.model_graphs[id(self.kts)].set_node_style(s['name'], 'default')
+
+        self.machine.generate_image(self.kts)
+        self.update_image()
+
+        for i in range(len(self.ctlFormulas)):
+            self.ctl_backgrounds[i].config(bg=self.defaultbg)
+            self.ctl_Checkboxes[i].config(bg=self.defaultbg)
+            self.ctl_states[i].config(bg=self.defaultbg)
+            self.check_results[i].config(text='')
+            
+        self.formula_frame.update_idletasks()
+        self.formula_canvas.configure(yscrollcommand=self.formula_scrollbar.set, scrollregion=self.formula_canvas.bbox("all"))
 
         
     def move_from(self, event):
