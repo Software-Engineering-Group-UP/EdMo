@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+import re
 
 def read_xml(diagramPath):
 
@@ -12,14 +13,21 @@ def read_xml(diagramPath):
     triggers = []
     ids = []
     connections = []
+    forkJoins = []
 
 
     for state in root.iter('mxCell'):
 
         value = state.get('value')
         state_dict = {}
+        style = state.get('style')
+        if style == None:
+            style = ""
 
-        if value != "" and value != None:
+        if re.search("shape=line.*", style): # shape=line indicates fork/join element
+            forkJoins.append({'id': state.get('id'), 'sources': [], 'targets': []})
+
+        elif value != "" and value != None:
             if state.get('parent') == "1":
                 state_dict['name'] = value
                 state_dict['tags'] = []
@@ -27,29 +35,47 @@ def read_xml(diagramPath):
                 ids.append([value, state.get('id')])
             else:
                 triggers.append([value, state.get('parent')])
-
+        
         elif value == "":
             connections.append([state.get('id'), state.get('source'), state.get('target')])
 
-    
-    for elem in triggers:
+
+    for elem in forkJoins:
+        for con in connections:
+            if elem['id'] == con[1]:
+                elem['sources'].append(con) # sources contains all connections, that have fj as source
+            if elem['id'] == con[2]:
+                elem['targets'].append(con) # targets contains all connections, that have fj as target
+
+    new_connections = []
+
+    for elem in forkJoins:
+        for con in connections:
+            if con in elem['targets']: # con is ingoing transition for fork/join
+                con[2] = elem['sources'][0][2] # set node after fj as target
+                for i in range(1,len(elem['sources'])):
+                    new_connections.append([con[0], con[1], elem['sources'][i][2]]) # make new connection with every node after fj
+            if con in elem['sources']: # con is outgoing transition for fork/join
+                con[1] = elem['targets'][0][1] # set node before fj as source
+                for i in range(1,len(elem['targets'])):
+                    new_connections.append([con[0], elem['targets'][i][1], con[2]]) # make new connection with every node before fj
+
+    connections += new_connections
+
+    for con in connections:
         transition = {}
-        transition['trigger'] = elem[0]
-        sourceValue = None
-        destValue = None
 
-        for sublist in connections:
-            if elem[1] == sublist[0]:
-                sourceValue = sublist[1]
-                destValue = sublist[2]
-
-        for sublist in ids:
-            if sourceValue == sublist[1]:
-                transition['source'] = sublist[0]
-            if destValue == sublist[1]:
-                transition['dest'] = sublist[0]    
+        for trig in triggers:
+            if con[0] == trig[1]:
+                transition['trigger'] = trig[0]
         
-        transitions.append(transition)
+        if transition:
+            for sublist in ids:
+                if con[1] == sublist[1]:
+                    transition['source'] = sublist[0]
+                if con[2] == sublist[1]:
+                    transition['dest'] = sublist[0]
+            transitions.append(transition)
 
 
     return states, transitions
