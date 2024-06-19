@@ -28,15 +28,18 @@ def read_xml(diagramPath):
             forkJoins.append({'id': state.get('id'), 'sources': [], 'targets': []})
 
         elif value != "" and value != None:
-            if state.get('parent') == "1":
+            if state.get('parent') == "1" and state.get('vertex'):  # element is a state
                 state_dict['name'] = value
                 state_dict['tags'] = []
                 states.append(state_dict)
                 ids.append([value, state.get('id')])
-            else:
+            elif state.get('parent') == "1" and state.get('edge'): # element is transition with guard
+                triggers.append([value, state.get('id')])
+                connections.append([state.get('id'), state.get('source'), state.get('target')])
+            else: # element is transition label
                 triggers.append([value, state.get('parent')])
         
-        elif value == "":
+        elif (value == "" or not value) and state.get('edge'): # element is transition without direct label
             connections.append([state.get('id'), state.get('source'), state.get('target')])
 
 

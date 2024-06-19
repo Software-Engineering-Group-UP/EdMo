@@ -202,6 +202,8 @@ class mcGUI(object):
         self.clear_apentrys()
         self.clear_ctl_frame()
 
+        self.ctlFormulas.clear()
+
         self.states, self.transitions = read_xml(diagramPath)
 
         self.kts = MT.KTS_model()
@@ -695,6 +697,7 @@ class mcGUI(object):
         self.ctl_Checkboxes.clear()
         self.ctl_states.clear()
         self.check_results.clear()
+
 
     def update_ctl_frame(self):
         self.clear_ctl_frame()
