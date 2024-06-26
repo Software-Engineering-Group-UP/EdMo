@@ -52,6 +52,7 @@ class mcGUI(object):
         self.ctl_frame.grid(column=0,row=1,sticky="nsew", padx=5, pady=5)
 
         # frame for displaying the graph
+        self.original_image = None
         self.create_graph_frame()
         self.graph_frame.grid(column=1,row=0,rowspan=2, sticky="nsew", padx=5, pady=5)
 
@@ -194,14 +195,17 @@ class mcGUI(object):
 
         diagramPath = fd.askopenfilename(title='Select a State Machine Diagram', initialdir='./examples', filetypes=[('XML files', '*.xml')])
 
+        try:
+            self.states, self.transitions = read_xml(diagramPath)
+        except FileNotFoundError:
+            return
+
         self.clear_aplabels()
         self.clear_statelabels()
         self.clear_apentrys()
         self.clear_ctl_frame()
 
         self.ctlFormulas.clear()
-
-        self.states, self.transitions = read_xml(diagramPath)
 
         self.kts = MT.GraphKTS_model()
         if is_hierarchical(self.states):
@@ -275,27 +279,34 @@ class mcGUI(object):
 
     
     def zoom(self, event=None, zoom_value=None):
-        if event != None:
-            if event.delta == -120 or event.delta == -1 or event.num == 5:
-                zoom_value=-1
-            if event.delta == 120 or event.delta == 1 or event.num == 4:
-                zoom_value=1
+        try:
+            if event != None:
+                if event.delta == -120 or event.delta == -1 or event.num == 5:
+                    zoom_value=-1
+                if event.delta == 120 or event.delta == 1 or event.num == 4:
+                    zoom_value=1
 
-        if zoom_value == -1:
-            if self.width / self.original_width < 0.4: # boundary for zoom out
-                return
-            self.width = int(self.width * 0.9)
-            self.height = int(self.height * 0.9)
-            self.image = self.original_image.resize((self.width, self.height))
+            if zoom_value == -1:
+                if self.width / self.original_width < 0.4: # boundary for zoom out
+                    return
+                self.width = int(self.width * 0.9)
+                self.height = int(self.height * 0.9)
+                self.image = self.original_image.resize((self.width, self.height))
+            
+            if zoom_value == 1:
+                if self.width / self.original_width > 1.6: # boundary for zoom in
+                    return
+                self.width = int(self.width * 1.1)
+                self.height = int(self.height * 1.1)
+                self.image = self.original_image.resize((self.width, self.height))
+            
+            self.update_image()
         
-        if zoom_value == 1:
-            if self.width / self.original_width > 1.6: # boundary for zoom in
-                return
-            self.width = int(self.width * 1.1)
-            self.height = int(self.height * 1.1)
-            self.image = self.original_image.resize((self.width, self.height))
-        
-        self.update_image()
+        except AttributeError as e:
+            if self.original_image:
+                print(e)
+            else:
+                pass
 
 
     def update_ap_frame(self):
@@ -773,11 +784,14 @@ class mcGUI(object):
 
         self.saveasPath = fd.askopenfilename(title='Select a file to load a model', initialdir='./saves', filetypes=[('json', '*.json')])
 
-        with open(self.saveasPath) as f:
-            data = json.load(f)
-            self.states = data['states']
-            self.transitions = data['transitions']
-            self.ctlFormulas = data['formulas']
+        try:
+            with open(self.saveasPath) as f:
+                data = json.load(f)
+                self.states = data['states']
+                self.transitions = data['transitions']
+                self.ctlFormulas = data['formulas']
+        except FileNotFoundError:
+            return
         
         self.kts = MT.GraphKTS_model()
         if is_hierarchical(self.states):
