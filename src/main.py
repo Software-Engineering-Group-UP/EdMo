@@ -2,7 +2,7 @@ import tkinter as tk
 from PIL import ImageTk, Image
 import modifiedTransitions as MT
 from tkinter import filedialog as fd
-from aux_functions import read_xml
+from aux_functions import read_xml, is_hierarchical
 from mc_algorithm import *
 import json
 
@@ -38,8 +38,8 @@ class mcGUI(object):
         # initialize kripke transition system
         self.states = []
         self.transitions = []
-        self.kts = MT.KTS_model()
-        self.machine = MT.KTS(model=self.kts, title="", show_state_attributes=True)
+        self.kts = MT.GraphKTS_model()
+        self.machine = MT.GraphKTS(model=self.kts, title="", show_state_attributes=True)
 
         self.ctlFormulas = []
 
@@ -54,9 +54,6 @@ class mcGUI(object):
         # frame for displaying the graph
         self.create_graph_frame()
         self.graph_frame.grid(column=1,row=0,rowspan=2, sticky="nsew", padx=5, pady=5)
-
-        self.imscale = 1.0  # scale for the canvaas image
-        self.delta = 1.3  # zoom magnitude
 
         self.root.mainloop()
 
@@ -206,9 +203,14 @@ class mcGUI(object):
 
         self.states, self.transitions = read_xml(diagramPath)
 
-        self.kts = MT.KTS_model()
-        self.machine = MT.KTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
-                              transitions=self.transitions, show_state_attributes=True)
+        self.kts = MT.GraphKTS_model()
+        if is_hierarchical(self.states):
+            self.machine = MT.HierarchicalKTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
+                                transitions=self.transitions, show_state_attributes=True)
+        else:
+            self.machine = MT.GraphKTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
+                                transitions=self.transitions, show_state_attributes=True)
+            
         self.machine.generate_image(self.kts)
         self.set_new_image()
         self.update_ap_frame()
@@ -383,9 +385,13 @@ class mcGUI(object):
             state_count += 1
 
         self.clear_apentrys()
-        self.kts = MT.KTS_model()
-        self.machine = MT.KTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
-                              transitions=self.transitions, show_state_attributes=True)
+        self.kts = MT.GraphKTS_model()
+        if is_hierarchical(self.states):
+            self.machine = MT.HierarchicalKTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
+                                transitions=self.transitions, show_state_attributes=True)
+        else:
+            self.machine = MT.GraphKTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
+                                transitions=self.transitions, show_state_attributes=True)
         self.machine.generate_image(self.kts)
         self.update_image()
 
@@ -773,9 +779,13 @@ class mcGUI(object):
             self.transitions = data['transitions']
             self.ctlFormulas = data['formulas']
         
-        self.kts = MT.KTS_model()
-        self.machine = MT.KTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
-                              transitions=self.transitions, show_state_attributes=True)
+        self.kts = MT.GraphKTS_model()
+        if is_hierarchical(self.states):
+            self.machine = MT.HierarchicalKTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
+                                transitions=self.transitions, show_state_attributes=True)
+        else:
+            self.machine = MT.GraphKTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
+                                transitions=self.transitions, show_state_attributes=True)
         self.machine.generate_image(self.kts)
         self.set_new_image()
         self.update_ap_frame()

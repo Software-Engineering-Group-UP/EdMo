@@ -12,8 +12,11 @@ def read_xml(diagramPath):
 
     triggers = []
     ids = []
+    startElements = []
     connections = []
     forkJoins = []
+    compStates = []
+    possibleChildren = []
 
 
     for state in root.iter('mxCell'):
@@ -24,8 +27,28 @@ def read_xml(diagramPath):
         if style == None:
             style = ""
 
-        if re.search("shape=line.*", style): # shape=line indicates fork/join element
+        if re.search(".*shape=startState.*", style):
+            startElements.append(state.get('id'))
+
+        elif re.search("shape=line.*", style): # shape=line indicates fork/join element
             forkJoins.append({'id': state.get('id'), 'sources': [], 'targets': []})
+        
+        elif re.search("swimlane.*", style): # swimlane indicates Composite State element
+            geometry = state.find('mxGeometry')
+            x = int(geometry.get('x'))
+            y = int(geometry.get('y'))
+            w = int(geometry.get('width'))
+            h = int(geometry.get('height'))
+            compStates.append({'name': value, 'id': state.get('id'), 'subspace': '', 'x': x, 'y': y, 'w': w, 'h': h})
+            state_dict['name'] = value
+            state_dict['tags'] = []
+            states.append(state_dict)
+            ids.append([value, state.get('id')])
+        
+        elif re.search("text.*", style): # find corresponding subspace for composite state
+            for comp in compStates:
+                if state.get('parent') == comp['id']:
+                    comp['subspace'] = state.get('id')
 
         elif value != "" and value != None:
             if state.get('parent') == "1" and state.get('vertex'):  # element is a state
@@ -33,6 +56,7 @@ def read_xml(diagramPath):
                 state_dict['tags'] = []
                 states.append(state_dict)
                 ids.append([value, state.get('id')])
+                possibleChildren.append(state)
             elif state.get('parent') == "1" and state.get('edge'): # element is transition with guard
                 triggers.append([value, state.get('id')])
                 connections.append([state.get('id'), state.get('source'), state.get('target')])
@@ -65,7 +89,63 @@ def read_xml(diagramPath):
 
     connections += new_connections
 
-    for con in connections:
+    substates = []
+    for elem in compStates:
+        for con in connections: # make sure all connections connect to composite state and not it's subtitle
+            if con[1] == elem['subspace']:
+                con[1] = elem['id']
+            if con[2] == elem['subspace']:
+                con[2] = elem['id']
+
+        children = []
+        for state in possibleChildren: # check if states are placed inside composite state
+            geometry = state.find('mxGeometry')
+            child_x = int(geometry.get('x'))
+            child_y = int(geometry.get('y'))
+
+            if (elem['x'] < child_x < (elem['x'] + elem['w'])) and (elem['y'] < child_y < (elem['y'] + elem['h'])):
+                children.append({'name': state.get('value'), 'tags': []})
+                substates.append({'id': state.get('id'), 'name': state.get('value'), 'parent': elem['name']})
+
+        elem['children'] = children
+    
+
+    for elem in states: # add list of children to composite state
+        for comp in compStates:
+            if elem['name'] == comp['name']:
+                elem['children'] = comp['children']
+
+    updated_states = []
+    sub_list = []
+    for sub in substates:
+        sub_list.append(sub['name'])
+    for elem in states:
+        if elem['name'] not in sub_list: # remove substates from states list
+            updated_states.append(elem)
+    states = updated_states
+
+    
+    for elem in ids: # change ids to reflect substate naming convention
+        for sub in substates: 
+            if elem[0] == sub['name']:
+                elem[0] = sub['parent'] + '_' + elem[0]
+    
+    initial_children = []
+    for con in connections: # find all initial substates
+        if con[1] in startElements:
+            for sub in substates:
+                if con[2] == sub['id']:
+                    initial_children.append([sub['name'], sub['parent']])
+                    break
+    
+    for elem in states: # add entry for initial in composite state
+        if 'children' in elem:
+            for child in initial_children:
+                if child[1] == elem['name']:
+                    elem['initial'] = child[0]
+
+
+    for con in connections: # connect trigger, source and dest to form transition
         transition = {}
 
         for trig in triggers:
@@ -82,5 +162,15 @@ def read_xml(diagramPath):
 
 
     return states, transitions
+
+
+def is_hierarchical(states):
+    hierarchical = False
+    for elem in states:
+        if "children" in elem:
+            hierarchical = True
+            break
+    
+    return hierarchical
 
 
