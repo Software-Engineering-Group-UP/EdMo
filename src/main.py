@@ -38,6 +38,7 @@ class mcGUI(object):
         # initialize kripke transition system
         self.states = []
         self.transitions = []
+        self.hierarchical = 0
         self.kts = MT.GraphKTS_model()
         self.machine = MT.GraphKTS(model=self.kts, title="", show_state_attributes=True)
 
@@ -209,6 +210,7 @@ class mcGUI(object):
 
         self.kts = MT.GraphKTS_model()
         if is_hierarchical(self.states):
+            self.hierarchical = 1
             self.machine = MT.HierarchicalKTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
                                 transitions=self.transitions, show_state_attributes=True)
         else:
@@ -253,7 +255,7 @@ class mcGUI(object):
 
     
     def reset_markings(self):
-        for s in self.states:
+        for s in self.machine.get_unnested_dicts():
             self.machine.model_graphs[id(self.kts)].set_node_style(s['name'], 'default')
 
         self.machine.generate_image(self.kts)
@@ -314,9 +316,11 @@ class mcGUI(object):
         self.clear_statelabels()
         self.clear_apentrys()
 
+        state_dict = self.machine.get_all_states()
+
         state_count = 0
 
-        for s in self.machine.states.items():
+        for s in state_dict.items():
             current_name = s[0]
             self.state_labels.append(tk.Label(self.table_frame, text=f"{current_name}", borderwidth=1, relief="solid"))
             self.state_labels[state_count].grid(column=0,row=1+state_count,sticky="nsew")
@@ -364,7 +368,9 @@ class mcGUI(object):
 
         self.clear_aplabels()
 
-        for s in self.machine.states.items():
+        state_dict = self.machine.get_all_states()
+
+        for s in state_dict.items():
             ap_tags = ""
 
             if s[1].tags != []:
@@ -385,16 +391,19 @@ class mcGUI(object):
 
         state_count = 0
 
-        for s in self.states:
+        state_dict = self.machine.get_all_states()
+
+        for s in state_dict.items():
             current_ap = self.ap_entrys[state_count].get()
             self.ap_entrys[state_count].destroy()
             self.ap_labels.append(tk.Label(self.table_frame, text=current_ap, borderwidth=1, relief="solid", wraplength=150))
             self.ap_labels[state_count].grid(column=1,row=1+state_count,sticky="nsew")
 
-            s['tags'] = current_ap.split(", ")
+            s[1].tags = current_ap.split(", ")
 
             state_count += 1
 
+        self.states = self.machine.get_updated_dicts()
         self.clear_apentrys()
         self.kts = MT.GraphKTS_model()
         if is_hierarchical(self.states):
@@ -429,7 +438,7 @@ class mcGUI(object):
 
 
     def checkModel(self):
-        current_kts = KripkeTransitionSystem(states=self.states, transitions=self.transitions, initial=self.states[0]['name'])
+        current_kts = KripkeTransitionSystem(states=self.machine.get_unnested_dicts(), transitions=self.transitions, initial=self.states[0]['name'])
         self.failed_states = set() # set of failed states accross all formulas
 
         for element in self.ctlFormulas:
@@ -446,11 +455,11 @@ class mcGUI(object):
     
     def display_results(self):
 
-        for s in self.states:
-            if s['name'] in self.failed_states:
-                self.machine.model_graphs[id(self.kts)].set_node_style(s['name'], 'unsat')
+        for s in self.machine.get_all_states().items():
+            if s[0] in self.failed_states:
+                self.machine.model_graphs[id(self.kts)].set_node_style(s[0], 'unsat')
             else:
-                self.machine.model_graphs[id(self.kts)].set_node_style(s['name'], 'sat')
+                self.machine.model_graphs[id(self.kts)].set_node_style(s[0], 'sat')
 
         self.machine.generate_image(self.kts)
         self.update_image()
@@ -522,7 +531,7 @@ class mcGUI(object):
         state_count = 0
 
         self.check_vars = []
-        for s in self.states:
+        for s in self.machine.get_unnested_dicts():
             if formula_number == None:
                 self.check_vars.append(tk.IntVar(value=1))
             else:
@@ -551,10 +560,10 @@ class mcGUI(object):
             self.ctlError_label.config(text=error)
         else:
             checked_states = []
-
-            for i in range(len(self.states)):
+            states = self.machine.get_unnested_dicts()
+            for i in range(len(states)):
                 if self.check_vars[i].get() == 1:
-                    checked_states.append(self.states[i]['name'])
+                    checked_states.append(states[i]['name'])
 
             new_var = tk.IntVar()
 
@@ -570,7 +579,7 @@ class mcGUI(object):
             self.check_results.append(tk.Label(master=self.formula_frame, text='', wraplength=400))
             self.check_results[self.number_formulas].grid(column=0, row=self.number_formulas*2 + 1, columnspan=2, sticky='w')
 
-            if len(checked_states) == len(self.states):
+            if len(checked_states) == len(states):
                 self.ctl_states.append(tk.Label(self.formula_frame, text=str(['All'])))
             else:
                 self.ctl_states.append(tk.Label(self.formula_frame, text=str(checked_states), wraplength=190))
@@ -627,10 +636,11 @@ class mcGUI(object):
             self.ctlError_label.config(text=error)
         else:
             checked_states = []
+            states = self.machine.get_unnested_dicts()
 
-            for i in range(len(self.states)):
+            for i in range(len(states)):
                 if self.check_vars[i].get() == 1:
-                    checked_states.append(self.states[i]['name'])
+                    checked_states.append(states[i]['name'])
             
             self.ctlFormulas[self.formula_number]['formula'] = self.formula_entry.get()
             self.ctlFormulas[self.formula_number]['description'] = self.description_entry.get()
@@ -638,7 +648,7 @@ class mcGUI(object):
 
             self.ctl_Checkboxes[self.formula_number].config(text=self.formula_entry.get())
 
-            if len(checked_states) == len(self.states):
+            if len(checked_states) == len(states):
                 self.ctl_states[self.formula_number].config(text=str(['All']))
             else:
                 self.ctl_states[self.formula_number].config(text=str(checked_states))
