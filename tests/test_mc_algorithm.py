@@ -1,7 +1,11 @@
 import unittest
-from src.KripkeTransitionSystem import *
-from src.tlParser import *
-from src.mc_algorithm import *
+import sys
+import os
+
+sys.path.insert(1, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
+from KripkeTransitionSystem import *
+from tlParser import *
+from mc_algorithm import *
 
 class TestMCAlgorithm(unittest.TestCase):
     @classmethod

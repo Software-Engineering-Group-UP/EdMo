@@ -13,6 +13,7 @@ def read_xml(diagramPath):
     triggers = []
     ids = []
     startElements = []
+    endElements = []
     connections = []
     forkJoins = []
     compStates = []
@@ -29,6 +30,9 @@ def read_xml(diagramPath):
 
         if re.search(".*shape=startState.*", style):
             startElements.append(state.get('id'))
+        
+        elif re.search(".*shape=endState.*", style):
+            endElements.append(state.get('id'))
 
         elif re.search("shape=line.*", style): # shape=line indicates fork/join element
             forkJoins.append({'id': state.get('id'), 'sources': [], 'targets': []})
@@ -143,6 +147,19 @@ def read_xml(diagramPath):
             for child in initial_children:
                 if child[1] == elem['name']:
                     elem['initial'] = child[0]
+
+    final_children = []
+    for con in connections: # find all final substates
+        if con[2] in endElements:
+            for sub in substates:
+                if con[1] == sub['id']:
+                    final_children.append(sub['name'])
+    
+    for elem in states:
+        if 'children' in elem:
+            for child in elem['children']:
+                if child['name'] in final_children:
+                    child['tags'] = ['final']
 
 
     for con in connections: # connect trigger, source and dest to form transition

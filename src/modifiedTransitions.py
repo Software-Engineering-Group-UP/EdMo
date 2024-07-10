@@ -1,11 +1,11 @@
 from transitions import *
 from transitions.extensions import HierarchicalGraphMachine
 from transitions.extensions import GraphMachine
-from transitions.extensions.states import add_state_features, Tags, Timeout
+from transitions.extensions.states import add_state_features, Tags
 from collections import OrderedDict
 
 
-@add_state_features(Tags, Timeout)
+@add_state_features(Tags)
 class HierarchicalKTS(HierarchicalGraphMachine):
     style_attributes = {
         "node": {
@@ -53,43 +53,18 @@ class HierarchicalKTS(HierarchicalGraphMachine):
             states_dict[name] = self.get_state(name)
         
         return states_dict
-    
-
-    def get_substates(self):
-        subs = list(set(self.get_all_states().items()) - set(self.states.items()))
-        sub_dicts = []
-        for s in subs:
-            names = s[0].split('_')
-            parent = names[0]
-            child = names[1]
-            match = 0
-            for entry in sub_dicts:
-                if entry['name'] == parent:
-                    entry['children'].append({'name': child, 'tags': s[1].tags})
-                    match = 1
-            if match == 0:
-                sub_dicts.append({'name': parent, 'tags': self.get_state(parent).tags, 'children': [{'name': child, 'tags': s[1].tags}]})
-        
-        return sub_dicts
-
 
     
-    def get_updated_dicts(self):
-        composite_states = self.get_substates()
-        updated_states = []
-        for elem in self.states.items():
-            match = 0
-            for comp in composite_states:
-                if elem[0] == comp['name']:
-                    updated_states.append(comp)
-                    match = 1
-            if match == 0:
-                state_dict = {}
-                state_dict['name'] = elem[0]
-                state_dict['tags'] = elem[1].tags
-                updated_states.append(state_dict)
-        
-        return updated_states
+    def get_updated_dicts(self, states):
+        for elem in states:
+            new_tags = self.get_state(elem['name']).tags
+            elem['tags'] = new_tags
+            if 'children' in elem:
+                for child in elem['children']:
+                    new_tags = self.get_state(elem['name'] + '_' + child['name']).tags
+                    child['tags'] = new_tags
+
+        return states
     
 
     def get_unnested_dicts(self):
@@ -103,7 +78,50 @@ class HierarchicalKTS(HierarchicalGraphMachine):
         return unnested_dicts
     
 
-@add_state_features(Tags, Timeout)
+    def expanded_structure(self, states, transitions):
+        composite_states = []
+        for elem in states:
+            if 'initial' in elem:
+                composite_states.append(elem['name'])
+                for t in transitions:
+                    if t['dest'] == elem['name']:
+                        t['dest'] = elem['name'] + '_' + elem['initial']
+        
+        new_states = []
+        for elem in self.get_unnested_dicts():
+            if 'final' in elem['tags']:
+                parent = elem['name'].split('_')[0]
+                for t in transitions:
+                    if t['source'] == parent:
+                        t['source'] = elem['name']
+            if elem['name'] not in composite_states:
+                new_states.append(elem)
+
+        return new_states, transitions
+    
+
+    def get_composite_states(self, states):
+        composite_states = []
+        for elem in states:
+            if 'children' in elem:
+                composite_states.append(elem['name'])
+        
+        return composite_states
+    
+
+    def non_composite_states(self, states):
+        non_comp_states = []
+        comp_states = self.get_composite_states(states)
+        states = self.get_unnested_dicts()
+        
+        for elem in states:
+            if elem['name'] not in comp_states:
+                non_comp_states.append(elem)
+
+        return non_comp_states
+    
+
+@add_state_features(Tags)
 class GraphKTS(GraphMachine):
     style_attributes = {
         "node": {
@@ -143,21 +161,27 @@ class GraphKTS(GraphMachine):
     def generate_image(self, model):
         self.model_graphs[id(model)].get_graph().draw('src/kts.png', prog='dot')
 
+
     def get_all_states(self):
         return self.states
     
-    def get_updated_dicts(self):
-        updated_states = []
-        for elem in self.get_all_states().items():
-            state_dict = {}
-            state_dict['name'] = elem[0]
-            state_dict['tags'] = elem[1].tags
-            updated_states.append(state_dict)
-        
-        return updated_states
+
+    def get_updated_dicts(self, states):
+        for elem in states:
+            new_tags = self.get_state(elem['name']).tags
+            elem['tags'] = new_tags
+
+        return states
+
+
+    def get_composite_states(self, states):
+        return []
     
-    def get_unnested_dicts(self):
-        return self.get_updated_dicts()
+
+    def non_composite_states(self, states):
+        return states
+    
+
 
 
 class GraphKTS_model():
