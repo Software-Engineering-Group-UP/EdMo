@@ -449,6 +449,7 @@ class mcGUI(object):
             transitions = self.transitions
         current_kts = KripkeTransitionSystem(states=states, transitions=transitions, initial=self.states[0]['name'])
         self.failed_states = set() # set of failed states accross all formulas
+        self.passed_states = set() # set of passes states accross all formulas
 
         for element in self.ctlFormulas:
             element['failed'] = []
@@ -458,6 +459,8 @@ class mcGUI(object):
                     if state not in result:
                         element['failed'].append(state)
                         self.failed_states.add(state)
+                    else:
+                        self.passed_states.add(state)
         
         self.display_results()
 
@@ -469,8 +472,10 @@ class mcGUI(object):
                 continue
             elif s[0] in self.failed_states:
                 self.machine.model_graphs[id(self.kts)].set_node_style(s[0], 'unsat')
-            else:
+            elif s[0] in self.passed_states:
                 self.machine.model_graphs[id(self.kts)].set_node_style(s[0], 'sat')
+            else:
+                self.machine.model_graphs[id(self.kts)].set_node_style(s[0], 'default')
 
         self.machine.generate_image(self.kts)
         self.update_image()
@@ -491,7 +496,7 @@ class mcGUI(object):
                 self.ctl_Checkboxes[i].config(bg='darksalmon')
                 self.ctl_states[i].config(bg='darksalmon')
                 self.check_results[i].config(text=f"failed for: {str(self.ctlFormulas[i]['failed'])}")
-            
+
         self.formula_frame.update_idletasks()
         self.formula_canvas.configure(yscrollcommand=self.formula_scrollbar.set, scrollregion=self.formula_canvas.bbox("all"))
 
