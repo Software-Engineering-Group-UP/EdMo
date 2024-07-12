@@ -6,8 +6,7 @@ from collections import OrderedDict
 sys.path.insert(1, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 import modifiedTransitions as MT
 
-class TestMCAlgorithm(unittest.TestCase):
-    #@classmethod
+class TestModifiedTransitions(unittest.TestCase):
     def setUp(self):
         self.states = [{'name': 'Home Page', 'tags': ['l_out']},
           {'name': 'Login', 'tags': ['l_out']},
