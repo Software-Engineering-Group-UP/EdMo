@@ -416,6 +416,8 @@ class mcGUI(object):
         else:
             self.machine = MT.GraphKTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
                                 transitions=self.transitions, show_state_attributes=True)
+            
+        self.machine.update_labels(self.states)
         self.machine.generate_image(self.kts)
         self.update_image()
 
@@ -832,6 +834,8 @@ class mcGUI(object):
         else:
             self.machine = MT.GraphKTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
                                 transitions=self.transitions, show_state_attributes=True)
+        
+        self.machine.update_labels(self.states)
         self.machine.generate_image(self.kts)
         self.set_new_image()
         self.update_ap_frame()

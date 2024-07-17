@@ -44,6 +44,16 @@ class HierarchicalKTS(HierarchicalGraphMachine):
     
     def generate_image(self, model):
         self.model_graphs[id(model)].get_graph().draw('src/kts.png', prog='dot')
+    
+
+    def update_labels(self, states):
+        for state in self.non_composite_states(states):
+            current_label = self.get_graph().get_node(state['name']).attr['label']
+            short_name = state['name']
+            if '_' in short_name:
+                short_name = state['name'].split('_')[1]
+            tags = current_label[len(short_name)+1 :]
+            self.get_graph().get_node(state['name']).attr['label'] = short_name + "\n" + tags
 
     
     def get_all_states(self):
@@ -160,6 +170,13 @@ class GraphKTS(GraphMachine):
     
     def generate_image(self, model):
         self.model_graphs[id(model)].get_graph().draw('src/kts.png', prog='dot')
+    
+
+    def update_labels(self, states):
+        for state in self.get_all_states().items():
+            current_label = self.get_graph().get_node(state[0]).attr['label']
+            tags = current_label[len(state[0])+1 :]
+            self.get_graph().get_node(state[0]).attr['label'] = state[0] + "\n" + tags
 
 
     def get_all_states(self):
