@@ -11,7 +11,7 @@ class mcGUI(object):
 
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("Modelchecker")
+        self.root.title("EdMo")
         self.root.config(bg="darkgrey")
 
         self.root.columnconfigure(index=0,weight=1)
@@ -221,6 +221,9 @@ class mcGUI(object):
         self.set_new_image()
         self.update_ap_frame()
         self.update_ctl_frame()
+
+        self.saveasPath = ''
+        self.root.title(f"EdMo")
 
         self.table_frame.update_idletasks()
         self.ap_canvas.configure(yscrollcommand=self.ap_scrollbar.set, scrollregion=self.ap_canvas.bbox("all"))
@@ -796,7 +799,7 @@ class mcGUI(object):
             self.ctlFormulas[i]['variable'] = tk.IntVar(value=int(element['variable'])) # transform back to IntVar
             self.ctl_Checkboxes[i].config(variable=self.ctlFormulas[i]['variable'])
         
-        self.root.title(f"Modelchecker - {self.saveasPath}")
+        self.root.title(f"EdMo - {self.saveasPath}")
 
 
     def save_progress(self):
@@ -853,7 +856,7 @@ class mcGUI(object):
 
         self.update_ctl_frame()
 
-        self.root.title(f"Modelchecker - {self.saveasPath}")
+        self.root.title(f"EdMo - {self.saveasPath}")
 
 
 
