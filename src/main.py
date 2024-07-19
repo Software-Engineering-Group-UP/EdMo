@@ -451,7 +451,7 @@ class mcGUI(object):
             transitions = self.transitions
         current_kts = KripkeTransitionSystem(states=states, transitions=transitions, initial=self.states[0]['name'])
         self.failed_states = set() # set of failed states accross all formulas
-        self.passed_states = set() # set of passes states accross all formulas
+        self.passed_states = set() # set of passed states accross all formulas
 
         for element in self.ctlFormulas:
             element['failed'] = []
