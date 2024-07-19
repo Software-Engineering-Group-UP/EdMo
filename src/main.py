@@ -420,6 +420,7 @@ class mcGUI(object):
         self.machine.update_labels(self.states)
         self.machine.generate_image(self.kts)
         self.update_image()
+        self.reset_markings()
 
         self.table_frame.update_idletasks()
         self.ap_canvas.configure(yscrollcommand=self.ap_scrollbar.set, scrollregion=self.ap_canvas.bbox("all"))
@@ -677,7 +678,7 @@ class mcGUI(object):
             else:
                 self.ctl_states[self.formula_number].config(text=str(checked_states))
 
-            
+            self.reset_markings()
             self.formula_frame.update_idletasks()
             self.formula_canvas.configure(yscrollcommand=self.formula_scrollbar.set, scrollregion=self.formula_canvas.bbox("all"))
 
@@ -735,6 +736,7 @@ class mcGUI(object):
         self.ctlFormulas = temp
 
         self.update_ctl_frame()
+        self.reset_markings()
 
 
     def clear_ctl_frame(self):
@@ -784,8 +786,11 @@ class mcGUI(object):
 
         data = {'states': self.states, 'transitions': self.transitions, 'formulas': self.ctlFormulas}
 
-        with open(self.saveasPath, 'w+') as f:
-            json.dump(data, f)
+        try:
+            with open(self.saveasPath, 'w+') as f:
+                json.dump(data, f)
+        except FileNotFoundError:
+            pass
 
         for i in range(len(self.ctlFormulas)):
             self.ctlFormulas[i]['variable'] = tk.IntVar(value=int(element['variable'])) # transform back to IntVar
@@ -806,8 +811,11 @@ class mcGUI(object):
 
             data = {'states': self.states, 'transitions': self.transitions, 'formulas': self.ctlFormulas}
 
-            with open(self.saveasPath, 'w+') as f:
-                json.dump(data, f)
+            try:
+                with open(self.saveasPath, 'w+') as f:
+                    json.dump(data, f)
+            except FileNotFoundError:
+                pass
 
             for i in range(len(self.ctlFormulas)):
                 self.ctlFormulas[i]['variable'] = tk.IntVar(value=int(element['variable'])) # transform back to IntVar
