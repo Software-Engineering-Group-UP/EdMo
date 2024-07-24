@@ -19,26 +19,31 @@ class mcGUI(object):
         self.root.rowconfigure(index=[0,1],weight=1)
 
         # create top menu
-        menubar = tk.Menu(self.root)
-        self.root.config(menu=menubar)
+        self.menubar = tk.Menu(self.root)
+        self.root.config(menu=self.menubar)
 
-        filemenu = tk.Menu(menubar, tearoff=0)
+        filemenu = tk.Menu(self.menubar, tearoff=0)
         filemenu.add_command(label="Import", command=self.import_kts)
         filemenu.add_command(label="Save as", command=self.save_as)
         filemenu.add_command(label="Save", command=self.save_progress)
         filemenu.add_command(label="Load", command=self.load)
-        menubar.add_cascade(label="File", menu=filemenu)
+        self.menubar.add_cascade(label="File", menu=filemenu)
 
         self.saveasPath = ''
 
-        helpmenu = tk.Menu(menubar, tearoff=0)
+        helpmenu = tk.Menu(self.menubar, tearoff=0)
         helpmenu.add_command(label="About")
-        menubar.add_cascade(label="Help", menu=helpmenu)
+        self.menubar.add_cascade(label="Help", menu=helpmenu)
+
+        layoutmenu = tk.Menu(self.menubar, tearoff=0)
+        layoutmenu.add_command(label="LeftRight", command= lambda: self.change_layout("LR"))
+        layoutmenu.add_command(label="TopBottom", command= lambda: self.change_layout("TB"))
+        self.menubar.add_cascade(label="Layout", menu=layoutmenu)
+        self.menubar.entryconfig("Layout", state="disabled")
 
         # initialize kripke transition system
         self.states = []
         self.transitions = []
-        self.hierarchical = 0
         self.kts = MT.GraphKTS_model()
         self.machine = MT.GraphKTS(model=self.kts, title="", show_state_attributes=True)
 
@@ -210,13 +215,13 @@ class mcGUI(object):
 
         self.kts = MT.GraphKTS_model()
         if is_hierarchical(self.states):
-            self.hierarchical = 1
             self.machine = MT.HierarchicalKTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
                                 transitions=self.transitions, show_state_attributes=True)
         else:
             self.machine = MT.GraphKTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
                                 transitions=self.transitions, show_state_attributes=True)
             
+        self.menubar.entryconfig("Layout", state="normal")
         self.machine.generate_image(self.kts)
         self.set_new_image()
         self.update_ap_frame()
@@ -233,8 +238,12 @@ class mcGUI(object):
         self.original_image = Image.open("src/kts.png")
         self.image = self.original_image
         self.original_width, self.original_height = self.image.size
-        self.width = self.graph_canvas.winfo_width()
-        self.height = int(self.original_height * self.width // self.original_width)
+        if self.original_width > self.original_height:
+            self.width = self.graph_canvas.winfo_width()
+            self.height = int(self.original_height * self.width // self.original_width)
+        else:
+            self.height = self.graph_canvas.winfo_height()
+            self.width = int(self.original_width * self.height // self.original_height)
         self.image = self.original_image.resize((self.width, self.height))
         self.graph_image = ImageTk.PhotoImage(self.image)
         self.graph_canvas.create_image(500, 225, image=self.graph_image, anchor="center")
@@ -256,6 +265,12 @@ class mcGUI(object):
         self.container = self.graph_canvas.create_rectangle(container_x, container_y, self.width, self.height, width=0)
         self.graph_canvas.configure(scrollregion=self.graph_canvas.bbox(self.container))
 
+    
+    def change_layout(self, direction):
+        self.machine.get_graph().graph_attr.update({'rankdir': direction})
+        self.machine.generate_image(self.kts)
+        self.set_new_image()
+        
     
     def reset_markings(self):
         if is_hierarchical(self.states):
@@ -846,6 +861,7 @@ class mcGUI(object):
             self.machine = MT.GraphKTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
                                 transitions=self.transitions, show_state_attributes=True)
         
+        self.menubar.entryconfig("Layout", state="normal")
         self.machine.update_labels(self.states)
         self.machine.generate_image(self.kts)
         self.set_new_image()

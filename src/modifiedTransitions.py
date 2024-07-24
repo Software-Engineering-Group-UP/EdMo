@@ -7,6 +7,11 @@ from collections import OrderedDict
 
 @add_state_features(Tags)
 class HierarchicalKTS(HierarchicalGraphMachine):
+    machine_attributes = {
+        "directed": "true",
+        "strict": "false",
+        "rankdir": "TB",
+    }
     style_attributes = {
         "node": {
             "": {},
@@ -133,6 +138,11 @@ class HierarchicalKTS(HierarchicalGraphMachine):
 
 @add_state_features(Tags)
 class GraphKTS(GraphMachine):
+    machine_attributes = {
+        "directed": "true",
+        "strict": "false",
+        "rankdir": "LR",
+    }
     style_attributes = {
         "node": {
             "": {},
