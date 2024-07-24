@@ -14,6 +14,10 @@ class mcGUI(object):
         self.root.title("EdMo")
         self.root.config(bg="darkgrey")
 
+        self.window_width= self.root.winfo_screenwidth()
+        self.window_height = self.root.winfo_screenheight()
+        self.root.geometry(f"{self.window_width}x{self.window_height}")
+
         self.root.columnconfigure(index=0,weight=1)
         self.root.columnconfigure(index=1,weight=3)
         self.root.rowconfigure(index=[0,1],weight=1)
@@ -66,8 +70,9 @@ class mcGUI(object):
 
 
     def create_ap_frame(self):
-        self.ap_frame = tk.Frame(self.root, width=450, height=250)
-        self.ap_frame.grid_propagate(0)
+        w = int(self.window_width/3)
+        h = int(self.window_height/2)
+        self.ap_frame = tk.Frame(self.root, width=w, height=h)
 
         self.ap_frame.columnconfigure(index=[0,1], weight=1)
         self.ap_frame.rowconfigure(index=[0,1,2], weight=2)
@@ -78,7 +83,7 @@ class mcGUI(object):
         self.editAP_button = tk.Button(master=self.ap_frame, text="Edit", command=self.editAP)
         self.editAP_button.grid(column=0,row=1,sticky="nw")
 
-        self.ap_canvas = tk.Canvas(self.ap_frame, width=430, height=155)
+        self.ap_canvas = tk.Canvas(self.ap_frame, width=w-20, height=int(h/1.5))
         self.ap_canvas.grid(column=0, row=2, columnspan=2, sticky="nws")
 
         self.table_frame = tk.Frame(self.ap_canvas)
@@ -108,7 +113,7 @@ class mcGUI(object):
             state_count += 1
         
         row_count = self.table_frame.grid_size()[1]
-        self.table_frame.columnconfigure(index=[0,1], minsize=215)
+        self.table_frame.columnconfigure(index=[0,1], minsize=int((w-40)/2))
         self.table_frame.rowconfigure(index=list(range(row_count)), minsize=25)
 
         self.table_frame.update_idletasks()
@@ -116,11 +121,12 @@ class mcGUI(object):
 
 
     def create_ctl_frame(self):
-        self.ctl_frame = tk.Frame(self.root, width=450, height=250)
-        self.ctl_frame.grid_propagate(0)
+        w = int(self.window_width/3)
+        h = int(self.window_height/2)
+        self.ctl_frame = tk.Frame(self.root, width=w, height=h)
 
         self.ctl_frame.columnconfigure(index=[0,1,2,3,4],weight=1)
-        self.ctl_frame.columnconfigure(index=[0,1,2,3],minsize=83)
+        self.ctl_frame.columnconfigure(index=[0,1,2,3],minsize=int(w/5))
         self.ctl_frame.rowconfigure(index=[0,1,2,3],weight=2)
 
         ctl_label = tk.Label(self.ctl_frame, text="Manage CTL-Formulas", borderwidth=2, relief="groove")
@@ -143,7 +149,7 @@ class mcGUI(object):
         check_button = tk.Button(master=self.ctl_frame, text="Check", command=self.checkModel)
         check_button.grid(column=4,row=1,sticky="ne")
 
-        self.formula_canvas = tk.Canvas(self.ctl_frame, width=400, height=155)
+        self.formula_canvas = tk.Canvas(self.ctl_frame, width=w-50, height=int(h/1.5))
         self.formula_canvas.grid(column=0, row=2, columnspan=4, sticky="nws")
 
         self.formula_frame = tk.Frame(self.formula_canvas)
@@ -165,8 +171,9 @@ class mcGUI(object):
 
 
     def create_graph_frame(self):
-        self.graph_frame = tk.Frame(self.root, height=500, width=1000)
-        self.graph_frame.grid_propagate(0)
+        w = int(2*self.window_width/3)
+        h = self.window_height
+        self.graph_frame = tk.Frame(self.root, height=h, width=w)
 
         self.graph_frame.columnconfigure(index=[0],weight=1)
         self.graph_frame.rowconfigure(index=[0,1],weight=2)
@@ -186,7 +193,7 @@ class mcGUI(object):
         reset_button = tk.Button(button_frame, text="Reset", command=self.reset_markings)
         reset_button.pack(side="right")
 
-        self.graph_canvas = tk.Canvas(self.graph_frame, width=1000, height=450)
+        self.graph_canvas = tk.Canvas(self.graph_frame, width=w, height=int(h/1.25))
         self.graph_canvas.grid(column=0,row=2,sticky="nw")
 
         self.graph_canvas.bind('<ButtonPress-1>', self.move_from)
