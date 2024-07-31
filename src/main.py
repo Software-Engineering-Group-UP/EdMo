@@ -66,6 +66,8 @@ class mcGUI(object):
         self.create_graph_frame()
         self.graph_frame.grid(column=1,row=0,rowspan=2, sticky="nsew", padx=5, pady=5)
 
+        self.root.state('zoomed')
+
         self.root.mainloop()
 
 
@@ -75,7 +77,8 @@ class mcGUI(object):
         self.ap_frame = tk.Frame(self.root, width=w, height=h)
 
         self.ap_frame.columnconfigure(index=[0,1], weight=1)
-        self.ap_frame.rowconfigure(index=[0,1,2], weight=2)
+        self.ap_frame.rowconfigure(index=[0,1,2], weight=1)
+        self.ap_frame.rowconfigure(index=[0,1], minsize=25)
 
         ap_headline = tk.Label(self.ap_frame, text="Manage APs", borderwidth=2, relief="groove")
         ap_headline.grid(column=0,row=0,columnspan=2,sticky="nsew")
@@ -128,6 +131,7 @@ class mcGUI(object):
         self.ctl_frame.columnconfigure(index=[0,1,2,3,4],weight=1)
         self.ctl_frame.columnconfigure(index=[0,1,2,3],minsize=int(w/5))
         self.ctl_frame.rowconfigure(index=[0,1,2,3],weight=2)
+        self.ctl_frame.rowconfigure(index=[0,1], minsize=25)
 
         ctl_label = tk.Label(self.ctl_frame, text="Manage CTL-Formulas", borderwidth=2, relief="groove")
         ctl_label.grid(column=0,row=0,columnspan=5,sticky="nsew")
@@ -176,7 +180,8 @@ class mcGUI(object):
         self.graph_frame = tk.Frame(self.root, height=h, width=w)
 
         self.graph_frame.columnconfigure(index=[0],weight=1)
-        self.graph_frame.rowconfigure(index=[0,1],weight=2)
+        self.graph_frame.rowconfigure(index=[0,1,2],weight=2)
+        self.graph_frame.rowconfigure(index=[0,1], minsize=25)
 
         graph_label = tk.Label(self.graph_frame, text="Model", borderwidth=2, relief="groove")
         graph_label.grid(column=0,row=0,sticky="nsew")
