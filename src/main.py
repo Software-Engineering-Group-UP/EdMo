@@ -533,7 +533,7 @@ class mcGUI(object):
 
         self.ctlWindow = tk.Toplevel(self.root)
         self.ctlWindow.title("Create CTL Formula")
-        self.ctlWindow.geometry("400x300")
+        self.ctlWindow.geometry("600x400")
         self.ctlWindow.rowconfigure(index=[0,1,2,3,4],weight=1)
         self.ctlWindow.columnconfigure(index=[0,1,2],weight=1)
 
@@ -545,7 +545,7 @@ class mcGUI(object):
             self.formula_entry.insert(10, self.ctlFormulas[formula_number]['formula'])
         self.formula_entry.grid(column=1, row=0, sticky="w")
 
-        self.ctlError_label = tk.Label(self.ctlWindow, text="")
+        self.ctlError_label = tk.Label(self.ctlWindow, text="", fg='red')
         self.ctlError_label.grid(column=1, row=1)
 
         description_label = tk.Label(self.ctlWindow, text="Enter description (optional):")     
@@ -646,7 +646,7 @@ class mcGUI(object):
     def openEditWindow(self):
         self.editWindow = tk.Toplevel(self.root)
         self.editWindow.title("Edit CTL Formula")
-        self.editWindow.geometry("400x300")
+        self.editWindow.geometry("600x400")
         self.editWindow.rowconfigure(index=[0],weight=1)
         self.editWindow.columnconfigure(index=[0],weight=1)
 
