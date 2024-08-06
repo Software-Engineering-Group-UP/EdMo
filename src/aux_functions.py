@@ -132,7 +132,7 @@ def read_xml(diagramPath):
     for elem in ids: # change ids to reflect substate naming convention
         for sub in substates: 
             if elem[0] == sub['name']:
-                elem[0] = sub['parent'] + '_' + elem[0]
+                elem[0] = sub['parent'] + '~' + elem[0]
     
     initial_children = []
     for con in connections: # find all initial substates

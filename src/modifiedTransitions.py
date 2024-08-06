@@ -3,6 +3,8 @@ from transitions.extensions import HierarchicalGraphMachine
 from transitions.extensions import GraphMachine
 from transitions.extensions.states import add_state_features, Tags
 from collections import OrderedDict
+from transitions.extensions.nesting import NestedState
+NestedState.separator = '~'
 
 
 @add_state_features(Tags)
@@ -55,8 +57,8 @@ class HierarchicalKTS(HierarchicalGraphMachine):
         for state in self.non_composite_states(states):
             current_label = self.get_graph().get_node(state['name']).attr['label']
             short_name = state['name']
-            if '_' in short_name:
-                short_name = state['name'].split('_')[1]
+            if '~' in short_name:
+                short_name = state['name'].split('~')[1]
             tags = current_label[len(short_name)+1 :]
             self.get_graph().get_node(state['name']).attr['label'] = short_name + "\n" + tags
 
@@ -76,7 +78,7 @@ class HierarchicalKTS(HierarchicalGraphMachine):
             elem['tags'] = new_tags
             if 'children' in elem:
                 for child in elem['children']:
-                    new_tags = self.get_state(elem['name'] + '_' + child['name']).tags
+                    new_tags = self.get_state(elem['name'] + '~' + child['name']).tags
                     child['tags'] = new_tags
 
         return states
@@ -100,12 +102,12 @@ class HierarchicalKTS(HierarchicalGraphMachine):
                 composite_states.append(elem['name'])
                 for t in transitions:
                     if t['dest'] == elem['name']:
-                        t['dest'] = elem['name'] + '_' + elem['initial']
+                        t['dest'] = elem['name'] + '~' + elem['initial']
         
         new_states = []
         for elem in self.get_unnested_dicts():
             if 'final' in elem['tags']:
-                parent = elem['name'].split('_')[0]
+                parent = elem['name'].split('~')[0]
                 for t in transitions:
                     if t['source'] == parent:
                         t['source'] = elem['name']
