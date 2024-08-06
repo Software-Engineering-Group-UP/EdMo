@@ -22,16 +22,18 @@ class mcGUI(object):
         self.root.columnconfigure(index=1,weight=3)
         self.root.rowconfigure(index=[0,1],weight=1)
 
+        self.diagram_loaded = 0
+
         # create top menu
         self.menubar = tk.Menu(self.root)
         self.root.config(menu=self.menubar)
 
-        filemenu = tk.Menu(self.menubar, tearoff=0)
-        filemenu.add_command(label="Import", command=self.import_kts)
-        filemenu.add_command(label="Save as", command=self.save_as)
-        filemenu.add_command(label="Save", command=self.save_progress)
-        filemenu.add_command(label="Load", command=self.load)
-        self.menubar.add_cascade(label="File", menu=filemenu)
+        self.filemenu = tk.Menu(self.menubar, tearoff=0)
+        self.filemenu.add_command(label="Import", command=self.import_kts)
+        self.filemenu.add_command(label="Save as", command=self.save_as, state="disabled")
+        self.filemenu.add_command(label="Save", command=self.save_progress, state="disabled")
+        self.filemenu.add_command(label="Load", command=self.load)
+        self.menubar.add_cascade(label="File", menu=self.filemenu)
 
         self.saveasPath = ''
 
@@ -83,7 +85,7 @@ class mcGUI(object):
         ap_headline = tk.Label(self.ap_frame, text="Manage APs", borderwidth=2, relief="groove")
         ap_headline.grid(column=0,row=0,columnspan=2,sticky="nsew")
 
-        self.editAP_button = tk.Button(master=self.ap_frame, text="Edit", command=self.editAP)
+        self.editAP_button = tk.Button(master=self.ap_frame, text="Edit", command=self.editAP, state="disabled")
         self.editAP_button.grid(column=0,row=1,sticky="nw")
 
         self.ap_canvas = tk.Canvas(self.ap_frame, width=w-20, height=int(h/1.5))
@@ -138,20 +140,20 @@ class mcGUI(object):
 
         self.defaultbg = ctl_label.cget('bg')
 
-        addCTL_button = tk.Button(master=self.ctl_frame, text="Add", command=lambda: self.openCTLwindow())
-        addCTL_button.grid(column=0,row=1,sticky="nw")
+        self.addCTL_button = tk.Button(master=self.ctl_frame, text="Add", command=self.openCTLwindow, state="disabled")
+        self.addCTL_button.grid(column=0,row=1,sticky="nw")
 
-        editCTL_button = tk.Button(master=self.ctl_frame, text="Edit", command=self.openEditWindow)
-        editCTL_button.grid(column=1, row=1, sticky="nw")
+        self.editCTL_button = tk.Button(master=self.ctl_frame, text="Edit", command=self.openEditWindow, state="disabled")
+        self.editCTL_button.grid(column=1, row=1, sticky="nw")
 
-        self.delete_button = tk.Button(master=self.ctl_frame, text="Delete", command=self.openDelWindow)
+        self.delete_button = tk.Button(master=self.ctl_frame, text="Delete", command=self.openDelWindow, state="disabled")
         self.delete_button.grid(column=2,row=1,sticky="nw")
 
-        self.description_button = tk.Button(master=self.ctl_frame, text="Description", command=self.showDescription)
+        self.description_button = tk.Button(master=self.ctl_frame, text="Description", command=self.showDescription, state="disabled")
         self.description_button.grid(column=3,row=1,sticky="nw")
 
-        check_button = tk.Button(master=self.ctl_frame, text="Check", command=self.checkModel)
-        check_button.grid(column=4,row=1,sticky="ne")
+        self.check_button = tk.Button(master=self.ctl_frame, text="Check", command=self.checkModel, state="disabled")
+        self.check_button.grid(column=4,row=1,sticky="ne")
 
         self.formula_canvas = tk.Canvas(self.ctl_frame, width=w-50, height=int(h/1.5))
         self.formula_canvas.grid(column=0, row=2, columnspan=4, sticky="nws")
@@ -189,14 +191,14 @@ class mcGUI(object):
         button_frame = tk.Frame(self.graph_frame)
         button_frame.grid(column=0, row=1, sticky="we")
 
-        zoomIN_button = tk.Button(button_frame, text="+", command=lambda: self.zoom(zoom_value=1))
-        zoomIN_button.pack(side="left")
+        self.zoomIN_button = tk.Button(button_frame, text="+", command=lambda: self.zoom(zoom_value=1), state="disabled")
+        self.zoomIN_button.pack(side="left")
 
-        zoomOUT_button = tk.Button(button_frame, text="-", command=lambda: self.zoom(zoom_value=-1))
-        zoomOUT_button.pack(side="left")
+        self.zoomOUT_button = tk.Button(button_frame, text="-", command=lambda: self.zoom(zoom_value=-1), state="disabled")
+        self.zoomOUT_button.pack(side="left")
 
-        reset_button = tk.Button(button_frame, text="Reset", command=self.reset_markings)
-        reset_button.pack(side="right")
+        self.reset_button = tk.Button(button_frame, text="Reset", command=self.reset_markings, state="disabled")
+        self.reset_button.pack(side="right")
 
         self.graph_canvas = tk.Canvas(self.graph_frame, width=w, height=int(h/1.25))
         self.graph_canvas.grid(column=0,row=2,sticky="nw")
@@ -217,6 +219,10 @@ class mcGUI(object):
             self.states, self.transitions = read_xml(diagramPath)
         except FileNotFoundError:
             return
+        
+        if self.diagram_loaded == 0:
+            self.enable_buttons()
+            self.diagram_loaded = 1
 
         self.clear_aplabels()
         self.clear_statelabels()
@@ -339,10 +345,21 @@ class mcGUI(object):
             self.update_image()
         
         except AttributeError as e:
-            if self.original_image:
-                print(e)
-            else:
-                pass
+            assert self.original_image == None
+
+
+    def enable_buttons(self):
+        self.filemenu.entryconfigure(1, state='normal')
+        self.filemenu.entryconfigure(2, state='normal')
+        self.editAP_button['state'] = 'normal'
+        self.addCTL_button['state'] = 'normal'
+        self.editCTL_button['state'] = 'normal'
+        self.delete_button['state'] = 'normal'
+        self.description_button['state'] = 'normal'
+        self.check_button['state'] = 'normal'
+        self.zoomIN_button['state'] = 'normal'
+        self.zoomOUT_button['state'] = 'normal'
+        self.reset_button['state'] = 'normal'
 
 
     def update_ap_frame(self):
@@ -864,7 +881,11 @@ class mcGUI(object):
                 self.ctlFormulas = data['formulas']
         except FileNotFoundError:
             return
-        
+
+        if self.diagram_loaded == 0:
+            self.enable_buttons()
+            self.diagram_loaded = 1
+
         self.kts = MT.GraphKTS_model()
         if is_hierarchical(self.states):
             self.machine = MT.HierarchicalKTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
