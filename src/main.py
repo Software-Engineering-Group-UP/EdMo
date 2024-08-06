@@ -216,10 +216,13 @@ class mcGUI(object):
         diagramPath = fd.askopenfilename(title='Select a State Machine Diagram', initialdir='./examples', filetypes=[('XML files', '*.xml')])
 
         try:
-            self.states, self.transitions = read_xml(diagramPath)
+            self.states, self.transitions, self.initial = read_xml(diagramPath)
         except FileNotFoundError:
             return
-        
+
+        if self.initial == None:
+            self.initial = list(self.states[0].values())[0]
+
         if self.diagram_loaded == 0:
             self.enable_buttons()
             self.diagram_loaded = 1
@@ -233,10 +236,10 @@ class mcGUI(object):
 
         self.kts = MT.GraphKTS_model()
         if is_hierarchical(self.states):
-            self.machine = MT.HierarchicalKTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
+            self.machine = MT.HierarchicalKTS(model=self.kts, title="", initial=self.initial, states=self.states,
                                 transitions=self.transitions, show_state_attributes=True)
         else:
-            self.machine = MT.GraphKTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
+            self.machine = MT.GraphKTS(model=self.kts, title="", initial=self.initial, states=self.states,
                                 transitions=self.transitions, show_state_attributes=True)
             
         self.menubar.entryconfig("Layout", state="normal")
@@ -458,10 +461,10 @@ class mcGUI(object):
         self.clear_apentrys()
         self.kts = MT.GraphKTS_model()
         if is_hierarchical(self.states):
-            self.machine = MT.HierarchicalKTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
+            self.machine = MT.HierarchicalKTS(model=self.kts, title="", initial=self.initial, states=self.states,
                                 transitions=self.transitions, show_state_attributes=True)
         else:
-            self.machine = MT.GraphKTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
+            self.machine = MT.GraphKTS(model=self.kts, title="", initial=self.initial, states=self.states,
                                 transitions=self.transitions, show_state_attributes=True)
             
         self.machine.update_labels(self.states)
@@ -497,7 +500,7 @@ class mcGUI(object):
         else:
             states = self.states
             transitions = self.transitions
-        current_kts = KripkeTransitionSystem(states=states, transitions=transitions, initial=self.states[0]['name'])
+        current_kts = KripkeTransitionSystem(states=states, transitions=transitions, initial=self.initial)
         self.failed_states = set() # set of failed states accross all formulas
         self.passed_states = set() # set of passed states accross all formulas
 
@@ -831,7 +834,7 @@ class mcGUI(object):
         for element in self.ctlFormulas:
             element['variable'] = element['variable'].get() # save value instead of IntVar Object
 
-        data = {'states': self.states, 'transitions': self.transitions, 'formulas': self.ctlFormulas}
+        data = {'initial': self.initial, 'states': self.states, 'transitions': self.transitions, 'formulas': self.ctlFormulas}
 
         try:
             with open(self.saveasPath, 'w+') as f:
@@ -856,7 +859,7 @@ class mcGUI(object):
             for element in self.ctlFormulas:
                 element['variable'] = element['variable'].get() # save value instead of IntVar Object
 
-            data = {'states': self.states, 'transitions': self.transitions, 'formulas': self.ctlFormulas}
+            data = {'initial': self.initial, 'states': self.states, 'transitions': self.transitions, 'formulas': self.ctlFormulas}
 
             try:
                 with open(self.saveasPath, 'w+') as f:
@@ -876,6 +879,7 @@ class mcGUI(object):
         try:
             with open(self.saveasPath) as f:
                 data = json.load(f)
+                self.initial = data['initial']
                 self.states = data['states']
                 self.transitions = data['transitions']
                 self.ctlFormulas = data['formulas']
@@ -888,10 +892,10 @@ class mcGUI(object):
 
         self.kts = MT.GraphKTS_model()
         if is_hierarchical(self.states):
-            self.machine = MT.HierarchicalKTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
+            self.machine = MT.HierarchicalKTS(model=self.kts, title="", initial=self.initial, states=self.states,
                                 transitions=self.transitions, show_state_attributes=True)
         else:
-            self.machine = MT.GraphKTS(model=self.kts, title="", initial=list(self.states[0].values())[0], states=self.states,
+            self.machine = MT.GraphKTS(model=self.kts, title="", initial=self.initial, states=self.states,
                                 transitions=self.transitions, show_state_attributes=True)
         
         self.menubar.entryconfig("Layout", state="normal")

@@ -154,7 +154,20 @@ def read_xml(diagramPath):
             for sub in substates:
                 if con[1] == sub['id']:
                     final_children.append(sub['name'])
-    
+
+    possibleInitial = []
+    for con in connections:
+        if con[1] in startElements:
+            for elem in ids:
+                if con[2] == elem[1]:
+                    possibleInitial.append(elem)
+
+    initial = None
+    for elem in possibleInitial:
+        for state in states:
+            if state['name'] == elem[0]:
+                initial = state['name']
+
     for elem in states:
         if 'children' in elem:
             for child in elem['children']:
@@ -177,8 +190,7 @@ def read_xml(diagramPath):
                     transition['dest'] = sublist[0]
             transitions.append(transition)
 
-
-    return states, transitions
+    return states, transitions, initial
 
 
 def is_hierarchical(states):
