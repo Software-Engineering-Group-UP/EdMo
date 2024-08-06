@@ -39,9 +39,9 @@ class TestModifiedTransitions(unittest.TestCase):
                                 {'trigger': 'inComp2', 'source': 'BeforeComp', 'dest': 'CompositeState2'},
                                 {'trigger': 'outComp1', 'source': 'CompositeState1', 'dest': 'AfterComp'},
                                 {'trigger': 'outComp2', 'source': 'CompositeState2', 'dest': 'AfterComp'},
-                                {'trigger': 'toB1', 'source': 'CompositeState1_A1', 'dest': 'CompositeState1_B1'},
-                                {'trigger': 'toC1', 'source': 'CompositeState1_B1', 'dest': 'CompositeState1_C1'},
-                                {'trigger': 'outB1', 'dest': 'AfterComp', 'source': 'CompositeState1_B1'},
+                                {'trigger': 'toB1', 'source': 'CompositeState1~A1', 'dest': 'CompositeState1~B1'},
+                                {'trigger': 'toC1', 'source': 'CompositeState1~B1', 'dest': 'CompositeState1~C1'},
+                                {'trigger': 'outB1', 'dest': 'AfterComp', 'source': 'CompositeState1~B1'},
                                 ]
         
         kts = MT.GraphKTS_model()
@@ -65,11 +65,11 @@ class TestModifiedTransitions(unittest.TestCase):
         actual = self.hsm_machine.get_all_states().items()
         expected = OrderedDict([('BeforeComp', self.hsm_machine.get_state('BeforeComp')),
                                 ('CompositeState1', self.hsm_machine.get_state('CompositeState1')),
-                                ('CompositeState1_A1', self.hsm_machine.get_state('CompositeState1_A1')),
-                                ('CompositeState1_B1', self.hsm_machine.get_state('CompositeState1_B1')),
-                                ('CompositeState1_C1', self.hsm_machine.get_state('CompositeState1_C1')),
+                                ('CompositeState1~A1', self.hsm_machine.get_state('CompositeState1~A1')),
+                                ('CompositeState1~B1', self.hsm_machine.get_state('CompositeState1~B1')),
+                                ('CompositeState1~C1', self.hsm_machine.get_state('CompositeState1~C1')),
                                 ('CompositeState2', self.hsm_machine.get_state('CompositeState2')),
-                                ('CompositeState2_A2', self.hsm_machine.get_state('CompositeState2_A2')),
+                                ('CompositeState2~A2', self.hsm_machine.get_state('CompositeState2~A2')),
                                 ('AfterComp', self.hsm_machine.get_state('AfterComp'))]).items()
         self.assertListEqual(list(actual), list(expected))
 
@@ -121,10 +121,10 @@ class TestModifiedTransitions(unittest.TestCase):
     def test_hsm_non_composite_states(self):
         actual = self.hsm_machine.non_composite_states(self.hsm_states)
         expected = [{'name': 'BeforeComp', 'tags': ['p']},
-                    {'name': 'CompositeState1_A1', 'tags': ['p']},
-                    {'name': 'CompositeState1_B1', 'tags': ['q']},
-                    {'name': 'CompositeState1_C1', 'tags': ['p', 'q']},
-                    {'name': 'CompositeState2_A2', 'tags': ['q']},
+                    {'name': 'CompositeState1~A1', 'tags': ['p']},
+                    {'name': 'CompositeState1~B1', 'tags': ['q']},
+                    {'name': 'CompositeState1~C1', 'tags': ['p', 'q']},
+                    {'name': 'CompositeState2~A2', 'tags': ['q']},
                     {'name': 'AfterComp', 'tags': ['p']}]
         self.assertListEqual(actual, expected)
 
@@ -133,25 +133,25 @@ class TestModifiedTransitions(unittest.TestCase):
         actual = self.hsm_machine.get_unnested_dicts()
         expected = [{'name': 'BeforeComp', 'tags': ['p']},
                     {'name': 'CompositeState1', 'tags': []},
-                    {'name': 'CompositeState1_A1', 'tags': ['p']},
-                    {'name': 'CompositeState1_B1', 'tags': ['q']},
-                    {'name': 'CompositeState1_C1', 'tags': ['p', 'q']},
+                    {'name': 'CompositeState1~A1', 'tags': ['p']},
+                    {'name': 'CompositeState1~B1', 'tags': ['q']},
+                    {'name': 'CompositeState1~C1', 'tags': ['p', 'q']},
                     {'name': 'CompositeState2', 'tags': []},
-                    {'name': 'CompositeState2_A2', 'tags': ['q']},
+                    {'name': 'CompositeState2~A2', 'tags': ['q']},
                     {'name': 'AfterComp', 'tags': ['p']}]
         self.assertListEqual(actual, expected)
     
 
     def test_hsm_expanded_structure(self):
         actual = self.hsm_machine.expanded_structure(self.hsm_states, self.hsm_transitions)
-        expected = ([{'name': 'BeforeComp', 'tags': ['p']}, {'name': 'CompositeState1_A1', 'tags': ['p']},
-                     {'name': 'CompositeState1_B1', 'tags': ['q']}, {'name': 'CompositeState1_C1', 'tags': ['p', 'q']},
-                     {'name': 'CompositeState2_A2', 'tags': ['q']}, {'name': 'AfterComp', 'tags': ['p']}],
-                    [{'trigger': 'inComp1', 'source': 'BeforeComp', 'dest': 'CompositeState1_A1'},
-                     {'trigger': 'inComp2', 'source': 'BeforeComp', 'dest': 'CompositeState2_A2'},
+        expected = ([{'name': 'BeforeComp', 'tags': ['p']}, {'name': 'CompositeState1~A1', 'tags': ['p']},
+                     {'name': 'CompositeState1~B1', 'tags': ['q']}, {'name': 'CompositeState1~C1', 'tags': ['p', 'q']},
+                     {'name': 'CompositeState2~A2', 'tags': ['q']}, {'name': 'AfterComp', 'tags': ['p']}],
+                    [{'trigger': 'inComp1', 'source': 'BeforeComp', 'dest': 'CompositeState1~A1'},
+                     {'trigger': 'inComp2', 'source': 'BeforeComp', 'dest': 'CompositeState2~A2'},
                      {'trigger': 'outComp1', 'source': 'CompositeState1', 'dest': 'AfterComp'},
                      {'trigger': 'outComp2', 'source': 'CompositeState2', 'dest': 'AfterComp'},
-                     {'trigger': 'toB1', 'source': 'CompositeState1_A1', 'dest': 'CompositeState1_B1'},
-                     {'trigger': 'toC1', 'source': 'CompositeState1_B1', 'dest': 'CompositeState1_C1'},
-                     {'trigger': 'outB1', 'dest': 'AfterComp', 'source': 'CompositeState1_B1'}])
+                     {'trigger': 'toB1', 'source': 'CompositeState1~A1', 'dest': 'CompositeState1~B1'},
+                     {'trigger': 'toC1', 'source': 'CompositeState1~B1', 'dest': 'CompositeState1~C1'},
+                     {'trigger': 'outB1', 'dest': 'AfterComp', 'source': 'CompositeState1~B1'}])
         self.assertEqual(actual, expected)
