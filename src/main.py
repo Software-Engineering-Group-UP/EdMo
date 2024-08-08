@@ -220,8 +220,20 @@ class mcGUI(object):
         except FileNotFoundError:
             return
 
-        if self.initial == None:
-            self.initial = list(self.states[0].values())[0]
+        try:
+            if self.initial == None:
+                self.initial = list(self.states[0].values())[0]
+            self.kts = MT.GraphKTS_model()
+            if is_hierarchical(self.states):
+                self.machine = MT.HierarchicalKTS(model=self.kts, title="", initial=self.initial, states=self.states,
+                                    transitions=self.transitions, show_state_attributes=True)
+            else:
+                self.machine = MT.GraphKTS(model=self.kts, title="", initial=self.initial, states=self.states,
+                                    transitions=self.transitions, show_state_attributes=True)
+
+        except Exception as e:
+            tk.messagebox.showerror('Import Error', f"Error: {e}")
+            return
 
         if self.diagram_loaded == 0:
             self.enable_buttons()
@@ -234,14 +246,6 @@ class mcGUI(object):
 
         self.ctlFormulas.clear()
 
-        self.kts = MT.GraphKTS_model()
-        if is_hierarchical(self.states):
-            self.machine = MT.HierarchicalKTS(model=self.kts, title="", initial=self.initial, states=self.states,
-                                transitions=self.transitions, show_state_attributes=True)
-        else:
-            self.machine = MT.GraphKTS(model=self.kts, title="", initial=self.initial, states=self.states,
-                                transitions=self.transitions, show_state_attributes=True)
-            
         self.menubar.entryconfig("Layout", state="normal")
         self.machine.generate_image(self.kts)
         self.set_new_image()
@@ -249,7 +253,6 @@ class mcGUI(object):
         self.update_ctl_frame()
 
         self.saveasPath = ''
-        self.root.title(f"EdMo")
 
         self.table_frame.update_idletasks()
         self.ap_canvas.configure(yscrollcommand=self.ap_scrollbar.set, scrollregion=self.ap_canvas.bbox("all"))
@@ -259,12 +262,14 @@ class mcGUI(object):
         self.original_image = Image.open("src/kts.png")
         self.image = self.original_image
         self.original_width, self.original_height = self.image.size
+
         if self.original_width > self.original_height:
             self.width = self.graph_canvas.winfo_width()
             self.height = int(self.original_height * self.width // self.original_width)
         else:
             self.height = self.graph_canvas.winfo_height()
             self.width = int(self.original_width * self.height // self.original_height)
+
         self.image = self.original_image.resize((self.width, self.height))
         self.graph_image = ImageTk.PhotoImage(self.image)
         self.graph_canvas.create_image(500, 225, image=self.graph_image, anchor="center")
