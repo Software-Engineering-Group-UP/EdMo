@@ -2,7 +2,8 @@ import tkinter as tk
 from PIL import ImageTk, Image
 import modifiedTransitions as MT
 from tkinter import filedialog as fd
-from aux_functions import read_xml, is_hierarchical
+from aux_functions import is_hierarchical
+from read_xml import read_xml
 from mc_algorithm import *
 import json
 
