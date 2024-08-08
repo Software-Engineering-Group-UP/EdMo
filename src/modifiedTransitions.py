@@ -3,6 +3,7 @@ from transitions.extensions import HierarchicalGraphMachine
 from transitions.extensions import GraphMachine
 from transitions.extensions.states import add_state_features, Tags
 from collections import OrderedDict
+import copy
 from transitions.extensions.nesting import NestedState
 NestedState.separator = '~'
 
@@ -110,12 +111,17 @@ class HierarchicalKTS(HierarchicalGraphMachine):
                 parent = elem['name'].split('~')[0]
                 for t in transitions:
                     if t['source'] == parent:
-                        t['source'] = elem['name']
+                        new_t = copy.deepcopy(t)
+                        new_t['source'] = elem['name']
+                        transitions.append(new_t)
+
             if elem['name'] not in composite_states:
                 new_states.append(elem)
 
-        return new_states, transitions
-    
+        new_transitions = list(filter(lambda t: t['source'] not in composite_states, transitions))
+
+        return new_states, new_transitions
+
 
     def get_composite_states(self, states):
         composite_states = []
