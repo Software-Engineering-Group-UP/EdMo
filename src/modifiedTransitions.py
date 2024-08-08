@@ -133,13 +133,9 @@ class HierarchicalKTS(HierarchicalGraphMachine):
     
 
     def non_composite_states(self, states):
-        non_comp_states = []
         comp_states = self.get_composite_states(states)
         states = self.get_unnested_dicts()
-        
-        for elem in states:
-            if elem['name'] not in comp_states:
-                non_comp_states.append(elem)
+        non_comp_states = list(filter(lambda elem: elem['name'] not in comp_states, states))
 
         return non_comp_states
     

@@ -119,16 +119,10 @@ def read_xml(diagramPath):
             if elem['name'] == comp['name']:
                 elem['children'] = comp['children']
 
-    updated_states = []
-    sub_list = []
-    for sub in substates:
-        sub_list.append(sub['name'])
-    for elem in states:
-        if elem['name'] not in sub_list: # remove substates from states list
-            updated_states.append(elem)
+    sub_list = list(map(lambda sub: sub['name'], substates))
+    updated_states = list(filter(lambda elem: elem['name'] not in sub_list, elem))
     states = updated_states
 
-    
     for elem in ids: # change ids to reflect substate naming convention
         for sub in substates: 
             if elem[0] == sub['name']:
