@@ -140,7 +140,7 @@ class TestModifiedTransitions(unittest.TestCase):
                     {'name': 'CompositeState2~A2', 'tags': ['q', 'final']},
                     {'name': 'AfterComp', 'tags': ['p']}]
         self.assertListEqual(actual, expected)
-    
+
 
     def test_hsm_expanded_structure(self):
         actual = self.hsm_machine.expanded_structure(self.hsm_states, self.hsm_transitions)
@@ -155,3 +155,14 @@ class TestModifiedTransitions(unittest.TestCase):
                      {'trigger': 'outComp1', 'source': 'CompositeState1~C1', 'dest': 'AfterComp'},
                      {'trigger': 'outComp2', 'source': 'CompositeState2~A2', 'dest': 'AfterComp'}])
         self.assertEqual(actual, expected)
+
+
+    def test_getAPs(self):
+        actual = self.machine.getAPs(self.states)
+        expected = {'l_in', 'l_out', 'not_empty', 'order_placed'}
+        self.assertSetEqual(actual, expected)
+
+
+    def test_hsm_getAPs(self):
+        actual = self.hsm_machine.getAPs(self.hsm_states)
+        expected = {'p', 'q', 'final'}

@@ -37,6 +37,7 @@ class HierarchicalKTS(HierarchicalGraphMachine):
             "previous": {"color": "blue", "fillcolor": "azure2", "peripheries": "1"},
             "sat": {"color": "green", "fillcolor": "lightgreen", "peripheries": "1"}, #add style for sat/unsat formula
             "unsat": {"color": "red", "fillcolor": "darksalmon", "peripheries": "1"},
+            "highlighted": {"color": "blue", "fillcolor": "white", "peripheries": "2"},
         },
         "edge": {"": {}, "default": {"color": "black"}, "previous": {"color": "blue"}},
         "graph": {
@@ -138,7 +139,16 @@ class HierarchicalKTS(HierarchicalGraphMachine):
         non_comp_states = list(filter(lambda elem: elem['name'] not in comp_states, states))
 
         return non_comp_states
-    
+
+
+    def getAPs(self, states):
+        states = self.get_unnested_dicts()
+        apSet = set()
+        for elem in states:
+            tags = list(filter(lambda tag: tag != '', elem['tags']))
+            apSet.update(tags)
+        return apSet
+
 
 @add_state_features(Tags)
 class GraphKTS(GraphMachine):
@@ -169,6 +179,7 @@ class GraphKTS(GraphMachine):
             "previous": {"color": "blue", "fillcolor": "azure2", "peripheries": "1"},
             "sat": {"color": "green", "fillcolor": "lightgreen", "peripheries": "1"}, #add style for sat/unsat formula
             "unsat": {"color": "red", "fillcolor": "darksalmon", "peripheries": "1"},
+            "highlighted": {"color": "blue", "fillcolor": "white", "peripheries": "2"},
         },
         "edge": {"": {}, "default": {"color": "black"}, "previous": {"color": "blue"}},
         "graph": {
@@ -207,12 +218,18 @@ class GraphKTS(GraphMachine):
 
     def get_composite_states(self, states):
         return []
-    
+
 
     def non_composite_states(self, states):
         return states
-    
 
+
+    def getAPs(self, states):
+        apSet = set()
+        for elem in states:
+            tags = list(filter(lambda tag: tag != '', elem['tags']))
+            apSet.update(tags)
+        return apSet
 
 
 class GraphKTS_model():

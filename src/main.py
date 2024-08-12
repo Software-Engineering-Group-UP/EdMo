@@ -86,8 +86,17 @@ class mcGUI(object):
         ap_headline = tk.Label(self.ap_frame, text="Manage APs", borderwidth=2, relief="groove")
         ap_headline.grid(column=0,row=0,columnspan=2,sticky="nsew")
 
-        self.editAP_button = tk.Button(master=self.ap_frame, text="Edit", command=self.editAP, state="disabled")
-        self.editAP_button.grid(column=0,row=1,sticky="nw")
+        ap_button_frame = tk.Frame(self.ap_frame)
+        ap_button_frame.grid(column=0, row=1, sticky="we")
+
+        self.editAP_button = tk.Button(master=ap_button_frame, text="Edit", command=self.editAP, state="disabled")
+        self.editAP_button.pack(side="left")
+
+        self.highlightAP_button = tk.Button(master=ap_button_frame, text="Highlight", command=self.openHighlightWindow, state="disabled")
+        self.highlightAP_button.pack(side="left")
+
+        self.highlight_label = tk.Label(master=ap_button_frame, text="", fg="blue")
+        self.highlight_label.pack(side="left")
 
         self.ap_canvas = tk.Canvas(self.ap_frame, width=w-20, height=int(h/1.5))
         self.ap_canvas.grid(column=0, row=2, columnspan=2, sticky="nws")
@@ -307,17 +316,19 @@ class mcGUI(object):
         for s in state_dicts:
             self.machine.model_graphs[id(self.kts)].set_node_style(s['name'], 'default')
 
-        self.machine.generate_image(self.kts)
-        self.update_image()
-
         for i in range(len(self.ctlFormulas)):
             self.ctl_backgrounds[i].config(bg=self.defaultbg)
             self.ctl_Checkboxes[i].config(bg=self.defaultbg)
             self.ctl_states[i].config(bg=self.defaultbg)
             self.check_results[i].config(text='')
+
+        self.highlight_label.config(text="")
             
         self.formula_frame.update_idletasks()
         self.formula_canvas.configure(yscrollcommand=self.formula_scrollbar.set, scrollregion=self.formula_canvas.bbox("all"))
+
+        self.machine.generate_image(self.kts)
+        self.update_image()
 
         
     def move_from(self, event):
@@ -361,6 +372,7 @@ class mcGUI(object):
         self.filemenu.entryconfigure(1, state='normal')
         self.filemenu.entryconfigure(2, state='normal')
         self.editAP_button['state'] = 'normal'
+        self.highlightAP_button['state'] = 'normal'
         self.addCTL_button['state'] = 'normal'
         self.editCTL_button['state'] = 'normal'
         self.delete_button['state'] = 'normal'
@@ -375,6 +387,7 @@ class mcGUI(object):
         self.clear_aplabels()
         self.clear_statelabels()
         self.clear_apentrys()
+        self.highlight_label.config(text="")
 
         state_dict = self.machine.get_all_states()
 
@@ -420,9 +433,7 @@ class mcGUI(object):
 
 
     def editAP(self):
-        self.editAP_button.destroy()
-        self.doneAP_button = tk.Button(master=self.ap_frame, text="Done", command=self.doneAP)
-        self.doneAP_button.grid(column=0,row=1,sticky="nw")
+        self.editAP_button.config(text="Done", command=self.doneAP)
 
         state_count = 0
 
@@ -445,9 +456,7 @@ class mcGUI(object):
 
 
     def doneAP(self):
-        self.doneAP_button.destroy()
-        self.editAP_button = tk.Button(master=self.ap_frame, text="Edit", command=self.editAP)
-        self.editAP_button.grid(column=0,row=1,sticky="nw")
+        self.editAP_button.config(text="Edit", command=self.editAP)
 
         state_count = 0
 
@@ -474,12 +483,79 @@ class mcGUI(object):
                                 transitions=self.transitions, show_state_attributes=True)
             
         self.machine.update_labels(self.states)
-        self.machine.generate_image(self.kts)
-        self.update_image()
+        highlight = self.highlight_label.cget("text")
         self.reset_markings()
+        self.highlight_label.config(text=highlight)
+        self.highlightAP(self.apList.index(highlight))
 
         self.table_frame.update_idletasks()
         self.ap_canvas.configure(yscrollcommand=self.ap_scrollbar.set, scrollregion=self.ap_canvas.bbox("all"))
+
+
+    def openHighlightWindow(self):
+        self.highlightWindow = tk.Toplevel(self.root)
+        self.highlightWindow.title("Highlight Atomic Proposition")
+        self.highlightWindow.geometry("400x200")
+        self.highlightWindow.rowconfigure(index=[0,1,2],weight=1)
+        self.highlightWindow.columnconfigure(index=[0],weight=1)
+
+        highlight_label = tk.Label(self.highlightWindow, text="Choose Atomic Proposition to be highlighted:")
+        highlight_label.grid(column=0, row=0, sticky="nw")
+
+        highlightCanvas = tk.Canvas(self.highlightWindow, height=150, width=100)
+        highlightCanvas.grid(column=0, row=1, sticky="nsew")
+        highlightFrame = tk.Frame(highlightCanvas)
+        highlightCanvas.create_window((0,0), window=highlightFrame, anchor="nw", tags="editFrame")
+
+        chosen_variable = tk.IntVar()
+        self.apList = ["None"] + list(self.machine.getAPs(self.states))
+
+        for i in range(len(self.apList)):
+            formula_radio = tk.Radiobutton(master=highlightFrame, text=self.apList[i], variable=chosen_variable, value=i)
+            formula_radio.grid(column=0, row=i, sticky="nw")
+        
+        ok_highlightWindow = tk.Button(self.highlightWindow, text="OK", command=lambda: self.highlightAP(chosen_variable.get()))
+        ok_highlightWindow.grid(column=0, row=2)
+
+        highlightScrollbar = tk.Scrollbar(self.highlightWindow, orient="vertical", command=highlightCanvas.yview)
+        highlightScrollbar.grid(column=1, row=1, sticky="ns")
+        highlightFrame.update_idletasks()
+        highlightCanvas.configure(yscrollcommand=highlightScrollbar.set, scrollregion=highlightCanvas.bbox("all"))
+
+
+    def highlightAP(self, ap_number):
+        self.highlightWindow.destroy()
+
+        ap = self.apList[ap_number]
+        if ap == "None":
+            ap = ''
+
+        states = self.states
+        if is_hierarchical(states):
+            states = self.machine.get_unnested_dicts()
+            
+        self.highlight_label.config(text=ap)
+        graph = self.machine.model_graphs[id(self.kts)].get_graph()
+        composite_states = self.machine.get_composite_states(self.states)
+
+        for s in states:
+            if s['name'] in composite_states:
+                continue
+            fillcolor = graph.get_node(s['name']).attr['fillcolor']
+            if ap in s['tags']:
+                self.machine.model_graphs[id(self.kts)].set_node_style(s['name'], 'highlighted')
+                graph.get_node(s['name']).attr['fillcolor'] = fillcolor
+            else:
+                if fillcolor == 'lightgreen':
+                    self.machine.model_graphs[id(self.kts)].set_node_style(s['name'], 'sat')
+                elif fillcolor == 'darksalmon':
+                    self.machine.model_graphs[id(self.kts)].set_node_style(s['name'], 'unsat')
+                else:
+                    self.machine.model_graphs[id(self.kts)].set_node_style(s['name'], 'default')
+            
+
+        self.machine.generate_image(self.kts)
+        self.update_image()
 
 
     def showDescription(self):
@@ -525,8 +601,13 @@ class mcGUI(object):
 
     
     def display_results(self):
+        graph = self.machine.model_graphs[id(self.kts)].get_graph()
+        composite_states = self.machine.get_composite_states(self.states)
 
         for s in self.machine.get_all_states().items():
+            if s[0] in composite_states:
+                continue
+            peripheries = graph.get_node(s[0]).attr['peripheries']
             if s[0] in self.machine.get_composite_states(self.states):
                 continue
             elif s[0] in self.failed_states:
@@ -535,6 +616,11 @@ class mcGUI(object):
                 self.machine.model_graphs[id(self.kts)].set_node_style(s[0], 'sat')
             else:
                 self.machine.model_graphs[id(self.kts)].set_node_style(s[0], 'default')
+
+            if peripheries == "2":
+                graph.get_node(s[0]).attr['peripheries'] = "2"
+                graph.get_node(s[0]).attr['color'] = "blue"
+
 
         self.machine.generate_image(self.kts)
         self.update_image()
@@ -681,7 +767,7 @@ class mcGUI(object):
         self.editWindow.rowconfigure(index=[0],weight=1)
         self.editWindow.columnconfigure(index=[0],weight=1)
 
-        formula_label = tk.Label(self.editWindow, text="Choose Formula to be edited:")     
+        formula_label = tk.Label(self.editWindow, text="Choose Formula to be edited:")
         formula_label.grid(column=0, row=0, sticky="nw")
 
         con_editWindow = tk.Button(self.editWindow, text="Continue", command=self.editFormula)
