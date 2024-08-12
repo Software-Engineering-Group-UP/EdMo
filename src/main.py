@@ -269,6 +269,8 @@ class mcGUI(object):
 
 
     def set_new_image(self):
+        w = self.graph_canvas.winfo_reqwidth()
+        h = self.graph_canvas.winfo_reqheight()
         self.original_image = Image.open("src/kts.png")
         self.image = self.original_image
         self.original_width, self.original_height = self.image.size
@@ -282,7 +284,7 @@ class mcGUI(object):
 
         self.image = self.original_image.resize((self.width, self.height))
         self.graph_image = ImageTk.PhotoImage(self.image)
-        self.graph_canvas.create_image(500, 225, image=self.graph_image, anchor="center")
+        self.graph_canvas.create_image(int(w/2), int(h/2), image=self.graph_image, anchor="center")
         container_x = self.graph_canvas.winfo_width() // 2 - self.width // 2
         container_y = self.graph_canvas.winfo_height() // 2 - self.height // 2
         self.container = self.graph_canvas.create_rectangle(container_x, container_y, self.width, self.height, width=0)
@@ -290,12 +292,14 @@ class mcGUI(object):
 
 
     def update_image(self):
+        w = self.graph_canvas.winfo_reqwidth()
+        h = self.graph_canvas.winfo_reqheight()
         self.original_image = Image.open("src/kts.png")
         self.image = self.original_image
         self.original_width, self.original_height = self.image.size
         self.image = self.original_image.resize((self.width, self.height))
         self.graph_image = ImageTk.PhotoImage(self.image)
-        self.graph_canvas.create_image(500, 225, image=self.graph_image, anchor="center")
+        self.graph_canvas.create_image(int(w/2), int(h/2), image=self.graph_image, anchor="center")
         container_x = self.graph_canvas.winfo_width() // 2 - self.width // 2
         container_y = self.graph_canvas.winfo_height() // 2 - self.height // 2
         self.container = self.graph_canvas.create_rectangle(container_x, container_y, self.width, self.height, width=0)
