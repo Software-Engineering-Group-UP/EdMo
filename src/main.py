@@ -142,6 +142,7 @@ class mcGUI(object):
 
         self.ctl_frame.columnconfigure(index=[0,1,2,3,4],weight=1)
         self.ctl_frame.columnconfigure(index=[0,1,2,3],minsize=int(w/5))
+        self.ctl_frame.columnconfigure(index=[4],minsize=int(w/10))
         self.ctl_frame.rowconfigure(index=[0,1,2,3],weight=2)
         self.ctl_frame.rowconfigure(index=[0,1], minsize=25)
 
@@ -552,18 +553,14 @@ class mcGUI(object):
 
 
     def showDescription(self):
-        self.description_button.destroy()
-        self.formula_button = tk.Button(master=self.ctl_frame, text="Formula", command=self.showFormula)
-        self.formula_button.grid(column=3,row=1,sticky="nw")
+        self.description_button.configure(text="Formula", command=self.showFormula)
 
         for i in range(len(self.ctlFormulas)):
             self.ctl_Checkboxes[i].config(text=self.ctlFormulas[i]['description'])
 
 
     def showFormula(self):
-        self.formula_button.destroy()
-        self.description_button = tk.Button(master=self.ctl_frame, text="Description", command=self.showDescription)
-        self.description_button.grid(column=3,row=1,sticky="nw")
+        self.description_button.configure(text="Description", command=self.showDescription)
 
         for i in range(len(self.ctlFormulas)):
             self.ctl_Checkboxes[i].config(text=self.ctlFormulas[i]['formula'])
