@@ -126,7 +126,7 @@ class mcGUI(object):
             self.ap_labels[state_count].grid(column=1,row=1+state_count,sticky="nsew")
 
             state_count += 1
-        
+
         row_count = self.table_frame.grid_size()[1]
         self.table_frame.columnconfigure(index=[0,1], minsize=int((w-40)/2))
         self.table_frame.rowconfigure(index=list(range(row_count)), minsize=25)
@@ -404,7 +404,7 @@ class mcGUI(object):
 
             current_ap = s[1].tags
             ap_tags = ', '.join(current_ap)
-            self.ap_labels.append(tk.Label(self.table_frame, text=ap_tags, borderwidth=1, relief="solid"))
+            self.ap_labels.append(tk.Label(self.table_frame, text=ap_tags, borderwidth=1, relief="solid", wraplength=150))
             self.ap_labels[state_count].grid(column=1,row=1+state_count,sticky="nsew")
 
             state_count += 1
