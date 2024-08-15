@@ -101,7 +101,7 @@ class mcGUI(object):
         self.ap_canvas = tk.Canvas(self.ap_frame, width=w-20, height=int(h/1.5))
         self.ap_canvas.grid(column=0, row=2, columnspan=2, sticky="nws")
 
-        self.table_frame = tk.Frame(self.ap_canvas)
+        self.table_frame = tk.Frame(self.ap_canvas, bg="pink")
         self.ap_canvas.create_window((0,0), window=self.table_frame, anchor="nw", tags="table_frame")
 
         self.ap_scrollbar = tk.Scrollbar(self.ap_frame, orient="vertical", command=self.ap_canvas.yview)
@@ -131,8 +131,8 @@ class mcGUI(object):
         self.table_frame.columnconfigure(index=[0,1], minsize=int((w-40)/2))
         self.table_frame.rowconfigure(index=list(range(row_count)), minsize=25)
 
-        self.table_frame.update_idletasks()
-        self.ap_canvas.configure(yscrollcommand=self.ap_scrollbar.set, scrollregion=self.ap_canvas.bbox("all"))
+        self.ap_canvas.configure(yscrollcommand=self.ap_scrollbar.set)
+        self.table_frame.bind("<Configure>", lambda e: self.ap_canvas.configure(yscrollcommand=self.ap_scrollbar.set, scrollregion=self.ap_canvas.bbox("all")))
 
 
     def create_ctl_frame(self):
@@ -176,8 +176,8 @@ class mcGUI(object):
         self.formula_scrollbar = tk.Scrollbar(self.ctl_frame, orient="vertical", command=self.formula_canvas.yview)
         self.formula_scrollbar.grid(column=4, row=2, sticky="nse")
 
-        self.formula_frame.update_idletasks()
-        self.formula_canvas.configure(yscrollcommand=self.formula_scrollbar.set, scrollregion=self.formula_canvas.bbox("all"))
+        self.formula_canvas.configure(yscrollcommand=self.formula_scrollbar.set)
+        self.formula_frame.bind("<Configure>", lambda e: self.formula_canvas.configure(yscrollcommand=self.formula_scrollbar.set, scrollregion=self.formula_canvas.bbox("all")))
 
         self.number_formulas = 0
         self.ctl_Checkboxes = []
@@ -264,9 +264,6 @@ class mcGUI(object):
 
         self.saveasPath = ''
 
-        self.table_frame.update_idletasks()
-        self.ap_canvas.configure(yscrollcommand=self.ap_scrollbar.set, scrollregion=self.ap_canvas.bbox("all"))
-
 
     def set_new_image(self):
         w = self.graph_canvas.winfo_reqwidth()
@@ -327,9 +324,6 @@ class mcGUI(object):
             self.check_results[i].config(text='')
 
         self.highlight_label.config(text="")
-            
-        self.formula_frame.update_idletasks()
-        self.formula_canvas.configure(yscrollcommand=self.formula_scrollbar.set, scrollregion=self.formula_canvas.bbox("all"))
 
         self.machine.generate_image(self.kts)
         self.update_image()
@@ -412,8 +406,6 @@ class mcGUI(object):
         row_count = self.table_frame.grid_size()[1]
         self.table_frame.rowconfigure(index=list(range(row_count)), minsize=25)
 
-        self.table_frame.update_idletasks()
-        self.ap_canvas.configure(yscrollcommand=self.ap_scrollbar.set, scrollregion=self.ap_canvas.bbox("all"))
 
     def clear_aplabels(self):
         for i in range(len(self.ap_labels)):
@@ -491,9 +483,6 @@ class mcGUI(object):
         self.reset_markings()
         self.highlight_label.config(text=highlight)
         self.highlightAP(self.apList.index(highlight))
-
-        self.table_frame.update_idletasks()
-        self.ap_canvas.configure(yscrollcommand=self.ap_scrollbar.set, scrollregion=self.ap_canvas.bbox("all"))
 
 
     def openHighlightWindow(self):
@@ -646,9 +635,6 @@ class mcGUI(object):
                 self.ctl_states[i].config(bg='darksalmon')
                 self.check_results[i].config(text=f"failed for: {str(self.ctlFormulas[i]['failed'])}")
 
-        self.formula_frame.update_idletasks()
-        self.formula_canvas.configure(yscrollcommand=self.formula_scrollbar.set, scrollregion=self.formula_canvas.bbox("all"))
-
 
     def openCTLwindow(self, formula_number=None):
 
@@ -757,9 +743,6 @@ class mcGUI(object):
             self.ctl_states[self.number_formulas].grid(column=1,row=self.number_formulas*2,sticky="w")
 
             self.number_formulas += 1
-            
-            self.formula_frame.update_idletasks()
-            self.formula_canvas.configure(yscrollcommand=self.formula_scrollbar.set, scrollregion=self.formula_canvas.bbox("all"))
 
             self.ctlWindow.destroy()
 
@@ -825,8 +808,6 @@ class mcGUI(object):
                 self.ctl_states[self.formula_number].config(text=str(checked_states))
 
             self.reset_markings()
-            self.formula_frame.update_idletasks()
-            self.formula_canvas.configure(yscrollcommand=self.formula_scrollbar.set, scrollregion=self.formula_canvas.bbox("all"))
 
             self.ctlWindow.destroy()
 
