@@ -117,6 +117,7 @@ class mcGUI(object):
         self.ap_entrys = []
         self.state_labels = []
         state_count = 0
+        self.apList = []
 
         for s in range(5): # see update_ap_frame()
             self.state_labels.append(tk.Label(self.table_frame, text="", borderwidth=1, relief="solid"))
@@ -465,7 +466,8 @@ class mcGUI(object):
             self.ap_labels.append(tk.Label(self.table_frame, text=current_ap, borderwidth=1, relief="solid", wraplength=150))
             self.ap_labels[state_count].grid(column=1,row=1+state_count,sticky="nsew")
 
-            s[1].tags = current_ap.split(", ")
+            current_ap = current_ap.replace(", ", ",")
+            s[1].tags = current_ap.split(",")
 
             state_count += 1
 
@@ -483,7 +485,8 @@ class mcGUI(object):
         highlight = self.highlight_label.cget("text")
         self.reset_markings()
         self.highlight_label.config(text=highlight)
-        self.highlightAP(self.apList.index(highlight))
+        if highlight != '':
+            self.highlightAP(self.apList.index(highlight))
 
 
     def openHighlightWindow(self):
@@ -586,7 +589,6 @@ class mcGUI(object):
                         self.failed_states.add(state)
                     else:
                         self.passed_states.add(state)
-        
         self.display_results()
 
     
