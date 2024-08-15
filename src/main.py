@@ -101,7 +101,7 @@ class mcGUI(object):
         self.ap_canvas = tk.Canvas(self.ap_frame, width=w-20, height=int(h/1.5))
         self.ap_canvas.grid(column=0, row=2, columnspan=2, sticky="nws")
 
-        self.table_frame = tk.Frame(self.ap_canvas, bg="pink")
+        self.table_frame = tk.Frame(self.ap_canvas)
         self.ap_canvas.create_window((0,0), window=self.table_frame, anchor="nw", tags="table_frame")
 
         self.ap_scrollbar = tk.Scrollbar(self.ap_frame, orient="vertical", command=self.ap_canvas.yview)
@@ -519,6 +519,8 @@ class mcGUI(object):
         highlightFrame.update_idletasks()
         highlightCanvas.configure(yscrollcommand=highlightScrollbar.set, scrollregion=highlightCanvas.bbox("all"))
 
+        self.highlightWindow.grab_set()
+
 
     def highlightAP(self, ap_number):
         self.highlightWindow.destroy()
@@ -706,6 +708,8 @@ class mcGUI(object):
         frame.update_idletasks()
         self.canvas.configure(yscrollcommand=self.state_scrollbar.set, scrollregion=self.canvas.bbox("all"))
 
+        self.ctlWindow.grab_set()
+
 
     def saveCTL(self):
 
@@ -775,7 +779,10 @@ class mcGUI(object):
         editScrollbar.grid(column=1, row=1, sticky="ns")
         editFrame.update_idletasks()
         editCanvas.configure(yscrollcommand=editScrollbar.set, scrollregion=editCanvas.bbox("all"))
-    
+
+        self.editWindow.grab_set()
+
+
     def editFormula(self):
         self.formula_number = self.chosen_variable.get()
         self.editWindow.destroy()
@@ -842,6 +849,8 @@ class mcGUI(object):
         delScrollbar.grid(column=1, row=1, sticky="ns")
         delFrame.update_idletasks()
         delCanvas.configure(yscrollcommand=delScrollbar.set, scrollregion=delCanvas.bbox("all"))
+
+        self.delWindow.grab_set()
 
 
     def deleteCTL(self):
