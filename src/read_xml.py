@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 import re
 
 
-def translate_forkJoin(forkJoins, connections):
+def translate_forkJoin(forkJoins, connections, triggers):
     for elem in forkJoins:
             for con in connections:
                 if elem['id'] == con[1]:
@@ -11,19 +11,41 @@ def translate_forkJoin(forkJoins, connections):
                     elem['targets'].append(con) # targets contains all connections, that have fj as target
 
     new_connections = []
+    changed_con = []
 
     for elem in forkJoins:
         for con in connections:
             if con in elem['targets']: # con is ingoing transition for fork/join
                 con[2] = elem['sources'][0][2] # set node after fj as target
+                changed_con.append(con)
                 for i in range(1,len(elem['sources'])):
-                    new_connections.append([con[0], con[1], elem['sources'][i][2]]) # make new connection with every node after fj
+                    new_con = [con[0], con[1], elem['sources'][i][2]]
+                    new_connections.append(new_con) # make new connection with every node after fj
             if con in elem['sources']: # con is outgoing transition for fork/join
                 con[1] = elem['targets'][0][1] # set node before fj as source
+                changed_con.append(con)
                 for i in range(1,len(elem['targets'])):
-                    new_connections.append([con[0], elem['targets'][i][1], con[2]]) # make new connection with every node before fj
+                    new_con = [con[0], elem['targets'][i][1], con[2]]
+                    new_connections.append(new_con) # make new connection with every node before fj
+
+    redundant = []
+    for con in connections:
+        for new_con in new_connections:
+            if con[1] == new_con[1] and con[2] == new_con[2]:
+                redundant.append(con)
+    connections = [x for x in connections if x not in redundant]
 
     connections += new_connections
+
+    redundant = []
+    connections2 = connections
+    trigger_parentIDs = list(map(lambda t: t[1], triggers))
+    for con in connections:
+        if con[0] not in trigger_parentIDs: #default connections
+            for elem in connections2:
+                if (con[1] == elem[1] and con[2] == elem[2]) and (con[0] != elem[0]):
+                    redundant.append(con)
+    connections = [x for x in connections if x not in redundant]
 
     return connections
 
@@ -121,6 +143,14 @@ def find_initial(states, connections, ids, startElements):
     return initial
 
 
+def remove_StartEnd(connections, startElements, endElements):
+    new_connections = list(filter(lambda con: (con[1] not in startElements)
+                                  and (con[1] not in endElements)
+                                  and (con[2] not in startElements)
+                                  and (con[2] not in endElements), connections))
+    return new_connections
+
+
 def read_xml(diagramPath):
 
     states = []
@@ -190,11 +220,13 @@ def read_xml(diagramPath):
             connections.append([state.get('id'), state.get('source'), state.get('target')])
 
 
-    connections = translate_forkJoin(forkJoins, connections) # turn fork/joins into normal connections
+    connections = translate_forkJoin(forkJoins, connections, triggers) # turn fork/joins into normal connections
 
     states, connections = translate_CompositeStates(states, connections, ids, compStates, possibleChildren, startElements, endElements)
 
     initial = find_initial(states, connections, ids, startElements)
+
+    connections = remove_StartEnd(connections, startElements, endElements)
 
     for con in connections: # connect trigger, source and dest to form transition
         transition = {}
@@ -203,12 +235,14 @@ def read_xml(diagramPath):
             if con[0] == trig[1]:
                 transition['trigger'] = trig[0]
 
-        if transition:
-            for elem in ids:
-                if con[1] == elem[1]:
-                    transition['source'] = elem[0]
-                if con[2] == elem[1]:
-                    transition['dest'] = elem[0]
-            transitions.append(transition)
+        if not transition:
+            transition['trigger'] = 'default'
+
+        for elem in ids:
+            if con[1] == elem[1]:
+                transition['source'] = elem[0]
+            if con[2] == elem[1]:
+                transition['dest'] = elem[0]
+        transitions.append(transition)
 
     return states, transitions, initial
