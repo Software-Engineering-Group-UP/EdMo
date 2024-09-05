@@ -58,16 +58,22 @@ class mcGUI(object):
 
         # frame for atomic propositions
         self.create_ap_frame()
-        self.ap_frame.grid(column=0,row=0,sticky="nsew", padx=5, pady=5)
+        self.ap_frame.grid(column=0, row=0, sticky="nsew", padx=5, pady=5)
 
         # frame for CTL Formulas
         self.create_ctl_frame()
-        self.ctl_frame.grid(column=0,row=1,sticky="nsew", padx=5, pady=5)
+        self.ctl_frame.grid(column=0, row=1, sticky="nsew", padx=5, pady=5)
 
         # frame for displaying the graph
         self.original_image = None
         self.create_graph_frame()
-        self.graph_frame.grid(column=1,row=0,rowspan=2, sticky="nsew", padx=5, pady=5)
+        self.graph_frame.grid(column=1, row=0, rowspan=2, sticky="nsew", padx=5, pady=5)
+
+        # resizing specifications
+        min_width = int(self.window_width/3) # width of AP-Frame and CTL-Frame
+        self.root.columnconfigure(0, minsize=min_width, weight=1)
+        self.root.columnconfigure(1, weight=1)
+        self.root.grid_propagate(False)
 
         self.root.state('zoomed')
 
@@ -214,6 +220,7 @@ class mcGUI(object):
 
         self.graph_canvas = tk.Canvas(self.graph_frame, width=w, height=int(h/1.25))
         self.graph_canvas.grid(column=0,row=2,sticky="nw")
+        self.graph_canvas.bind('<Configure>', self.on_canvas_resize)
 
         self.graph_canvas.bind('<ButtonPress-1>', self.move_from)
         self.graph_canvas.bind('<B1-Motion>', self.move_to)
@@ -366,6 +373,10 @@ class mcGUI(object):
         
         except AttributeError as e:
             assert self.original_image == None
+
+
+    def on_canvas_resize(self, event):
+        self.graph_canvas.config(width=event.width, height=event.height)
 
 
     def enable_buttons(self):
