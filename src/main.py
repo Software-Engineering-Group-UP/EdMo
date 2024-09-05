@@ -246,9 +246,11 @@ class mcGUI(object):
             if is_hierarchical(self.states):
                 self.machine = MT.HierarchicalKTS(model=self.kts, title="", initial=self.initial, states=self.states,
                                     transitions=self.transitions, show_state_attributes=True)
+                self.layout = 'TB'
             else:
                 self.machine = MT.GraphKTS(model=self.kts, title="", initial=self.initial, states=self.states,
                                     transitions=self.transitions, show_state_attributes=True)
+                self.layout = 'LR'
 
         except Exception as e:
             tk.messagebox.showerror('Import Error', f"Error: {e}")
@@ -313,7 +315,8 @@ class mcGUI(object):
 
     
     def change_layout(self, direction):
-        self.machine.get_graph().graph_attr.update({'rankdir': direction})
+        self.layout = direction
+        self.machine.get_graph().graph_attr.update({'rankdir': self.layout})
         self.machine.generate_image(self.kts)
         self.set_new_image()
         
@@ -491,7 +494,9 @@ class mcGUI(object):
         else:
             self.machine = MT.GraphKTS(model=self.kts, title="", initial=self.initial, states=self.states,
                                 transitions=self.transitions, show_state_attributes=True)
-            
+
+        self.machine.get_graph().graph_attr.update({'rankdir': self.layout})
+
         self.machine.update_labels(self.states)
         highlight = self.highlight_label.cget("text")
         self.reset_markings()
@@ -990,9 +995,11 @@ class mcGUI(object):
         if is_hierarchical(self.states):
             self.machine = MT.HierarchicalKTS(model=self.kts, title="", initial=self.initial, states=self.states,
                                 transitions=self.transitions, show_state_attributes=True)
+            self.layout = 'TB'
         else:
             self.machine = MT.GraphKTS(model=self.kts, title="", initial=self.initial, states=self.states,
                                 transitions=self.transitions, show_state_attributes=True)
+            self.layout = 'LR'
         
         self.menubar.entryconfig("Layout", state="normal")
         self.machine.update_labels(self.states)
