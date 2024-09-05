@@ -151,6 +151,16 @@ def remove_StartEnd(connections, startElements, endElements):
     return new_connections
 
 
+def match_triggers(con, triggers):
+    matching_triggers = []
+    for trig in triggers:
+            if con[0] == trig[1]:
+                matching_triggers.append(trig[0])
+    if matching_triggers == []:
+        matching_triggers.append('default')
+    return matching_triggers
+
+
 def read_xml(diagramPath):
 
     states = []
@@ -229,20 +239,16 @@ def read_xml(diagramPath):
     connections = remove_StartEnd(connections, startElements, endElements)
 
     for con in connections: # connect trigger, source and dest to form transition
-        transition = {}
+        matching_triggers = match_triggers(con, triggers)
 
-        for trig in triggers:
-            if con[0] == trig[1]:
-                transition['trigger'] = trig[0]
+        for trig in matching_triggers:
+            transition = {'trigger': trig}
 
-        if not transition:
-            transition['trigger'] = 'default'
-
-        for elem in ids:
-            if con[1] == elem[1]:
-                transition['source'] = elem[0]
-            if con[2] == elem[1]:
-                transition['dest'] = elem[0]
-        transitions.append(transition)
+            for elem in ids:
+                if con[1] == elem[1]:
+                    transition['source'] = elem[0]
+                if con[2] == elem[1]:
+                    transition['dest'] = elem[0]
+            transitions.append(transition)
 
     return states, transitions, initial
