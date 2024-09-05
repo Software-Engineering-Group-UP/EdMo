@@ -38,13 +38,15 @@ def translate_forkJoin(forkJoins, connections, triggers):
     connections += new_connections
 
     redundant = []
-    connections2 = connections
+    checked = []
     trigger_parentIDs = list(map(lambda t: t[1], triggers))
+    default_connections = list(filter(lambda con: con[0] not in trigger_parentIDs, connections))
     for con in connections:
-        if con[0] not in trigger_parentIDs: #default connections
-            for elem in connections2:
-                if (con[1] == elem[1] and con[2] == elem[2]) and (con[0] != elem[0]):
-                    redundant.append(con)
+        for elem in default_connections:
+                if (con[1] == elem[1] and con[2] == elem[2]) and (con[0] != elem[0]) and elem not in checked:
+                    redundant.append(elem)
+                    checked.append(con)
+
     connections = [x for x in connections if x not in redundant]
 
     return connections
