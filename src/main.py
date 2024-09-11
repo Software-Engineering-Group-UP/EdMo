@@ -557,7 +557,7 @@ class mcGUI(object):
             if s['name'] in composite_states:
                 continue
             fillcolor = graph.get_node(s['name']).attr['fillcolor']
-            if ap in s['tags']:
+            if ap in s['tags'] and ap != '':
                 self.machine.model_graphs[id(self.kts)].set_node_style(s['name'], 'highlighted')
                 graph.get_node(s['name']).attr['fillcolor'] = fillcolor
             else:
