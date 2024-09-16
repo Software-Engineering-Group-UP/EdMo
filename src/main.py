@@ -17,6 +17,12 @@ class mcGUI(object):
 
         self.window_width= self.root.winfo_screenwidth()
         self.window_height = self.root.winfo_screenheight()
+        if self.window_width > 1536 and self.window_height > 864:
+            self.window_width = 1500
+            self.window_height = 750
+        else:
+            self.root.state('zoomed')
+
         self.root.geometry(f"{self.window_width}x{self.window_height}")
 
         self.root.columnconfigure(index=0,weight=1)
@@ -74,8 +80,6 @@ class mcGUI(object):
         self.root.columnconfigure(0, minsize=min_width, weight=1)
         self.root.columnconfigure(1, weight=1)
         self.root.grid_propagate(False)
-
-        self.root.state('zoomed')
 
         self.root.mainloop()
 
