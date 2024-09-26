@@ -831,7 +831,7 @@ class mcGUI(object):
             if len(checked_states) == len(states):
                 self.ctl_states[self.formula_number].config(text=str(['All']))
             else:
-                self.ctl_states[self.formula_number].config(text=str(checked_states))
+                self.ctl_states[self.formula_number].config(text=str(checked_states), wraplength=190)
 
             self.reset_markings()
 
