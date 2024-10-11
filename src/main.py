@@ -668,7 +668,7 @@ class mcGUI(object):
         formula_label = tk.Label(self.ctlWindow, text="Enter CTL Formula:")     
         formula_label.grid(column=0, row=0, sticky="e")
 
-        self.formula_entry = tk.Entry(self.ctlWindow)
+        self.formula_entry = tk.Entry(self.ctlWindow, width=45)
         if formula_number != None:
             self.formula_entry.insert(10, self.ctlFormulas[formula_number]['formula'])
         self.formula_entry.grid(column=1, row=0, sticky="w")
@@ -676,10 +676,10 @@ class mcGUI(object):
         self.ctlError_label = tk.Label(self.ctlWindow, text="", fg='red')
         self.ctlError_label.grid(column=1, row=1)
 
-        description_label = tk.Label(self.ctlWindow, text="Enter description (optional):")     
+        description_label = tk.Label(self.ctlWindow, text="Enter description (optional):")
         description_label.grid(column=0, row=2, sticky="e")
 
-        self.description_entry = tk.Entry(self.ctlWindow)
+        self.description_entry = tk.Entry(self.ctlWindow, width=45)
         if formula_number != None:
             self.description_entry.insert(10, self.ctlFormulas[formula_number]['description'])
         self.description_entry.grid(column=1, row=2, sticky="w")
