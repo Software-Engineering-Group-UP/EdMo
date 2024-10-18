@@ -506,7 +506,7 @@ class mcGUI(object):
         self.reset_markings()
         self.highlight_label.config(text=highlight)
         if highlight != '':
-            self.highlightAP(self.apList.index(highlight))
+            self.highlightAP(highlight)
 
 
     def openHighlightWindow(self):
@@ -531,7 +531,7 @@ class mcGUI(object):
             formula_radio = tk.Radiobutton(master=highlightFrame, text=self.apList[i], variable=chosen_variable, value=i)
             formula_radio.grid(column=0, row=i, sticky="nw")
         
-        ok_highlightWindow = tk.Button(self.highlightWindow, text="OK", command=lambda: self.highlightAP(chosen_variable.get()))
+        ok_highlightWindow = tk.Button(self.highlightWindow, text="OK", command=lambda: self.highlightAP(self.apList[chosen_variable.get()]))
         ok_highlightWindow.grid(column=0, row=2)
 
         highlightScrollbar = tk.Scrollbar(self.highlightWindow, orient="vertical", command=highlightCanvas.yview)
@@ -542,10 +542,10 @@ class mcGUI(object):
         self.highlightWindow.grab_set()
 
 
-    def highlightAP(self, ap_number):
-        self.highlightWindow.destroy()
+    def highlightAP(self, ap):
+        if hasattr(self, 'highlightWindow'):
+            self.highlightWindow.destroy()
 
-        ap = self.apList[ap_number]
         if ap == "None":
             ap = ''
 
@@ -939,7 +939,8 @@ class mcGUI(object):
         for element in self.ctlFormulas:
             element['variable'] = element['variable'].get() # save value instead of IntVar Object
 
-        data = {'initial': self.initial, 'states': self.states, 'transitions': self.transitions, 'formulas': self.ctlFormulas}
+        data = {'initial': self.initial, 'states': self.states, 'transitions': self.transitions, 'formulas': self.ctlFormulas,
+                'layout': self.layout, 'highlight': self.highlight_label.cget("text")}
 
         try:
             with open(self.saveasPath, 'w+') as f:
@@ -948,7 +949,8 @@ class mcGUI(object):
             pass
 
         for i in range(len(self.ctlFormulas)):
-            self.ctlFormulas[i]['variable'] = tk.IntVar(value=int(element['variable'])) # transform back to IntVar
+            int_value = self.ctlFormulas[i]['variable']
+            self.ctlFormulas[i]['variable'] = tk.IntVar(value=int_value) # transform back to IntVar
             self.ctl_Checkboxes[i].config(variable=self.ctlFormulas[i]['variable'])
         
         self.root.title(f"EdMo - {self.saveasPath}")
@@ -964,7 +966,8 @@ class mcGUI(object):
             for element in self.ctlFormulas:
                 element['variable'] = element['variable'].get() # save value instead of IntVar Object
 
-            data = {'initial': self.initial, 'states': self.states, 'transitions': self.transitions, 'formulas': self.ctlFormulas}
+            data = {'initial': self.initial, 'states': self.states, 'transitions': self.transitions, 'formulas': self.ctlFormulas,
+                    'layout': self.layout, 'highlight': self.highlight_label.cget("text")}
 
             try:
                 with open(self.saveasPath, 'w+') as f:
@@ -973,7 +976,8 @@ class mcGUI(object):
                 pass
 
             for i in range(len(self.ctlFormulas)):
-                self.ctlFormulas[i]['variable'] = tk.IntVar(value=int(element['variable'])) # transform back to IntVar
+                int_value = self.ctlFormulas[i]['variable']
+                self.ctlFormulas[i]['variable'] = tk.IntVar(value=int_value) # transform back to IntVar
                 self.ctl_Checkboxes[i].config(variable=self.ctlFormulas[i]['variable'])
     
     
@@ -988,6 +992,8 @@ class mcGUI(object):
                 self.states = data['states']
                 self.transitions = data['transitions']
                 self.ctlFormulas = data['formulas']
+                self.layout = data['layout']
+                self.highlight = data['highlight']
         except FileNotFoundError:
             return
 
@@ -999,17 +1005,17 @@ class mcGUI(object):
         if is_hierarchical(self.states):
             self.machine = MT.HierarchicalKTS(model=self.kts, title="", initial=self.initial, states=self.states,
                                 transitions=self.transitions, show_state_attributes=True)
-            self.layout = 'TB'
         else:
             self.machine = MT.GraphKTS(model=self.kts, title="", initial=self.initial, states=self.states,
                                 transitions=self.transitions, show_state_attributes=True)
-            self.layout = 'LR'
-        
+
+        self.machine.get_graph().graph_attr.update({'rankdir': self.layout})
         self.menubar.entryconfig("Layout", state="normal")
         self.machine.update_labels(self.states)
         self.machine.generate_image(self.kts)
         self.set_new_image()
         self.update_ap_frame()
+        self.highlightAP(self.highlight)
 
         for element in self.ctlFormulas:
             element['variable'] = tk.IntVar(value=int(element['variable'])) # transform back to IntVar with saved value
