@@ -268,6 +268,8 @@ class mcGUI(object):
         self.clear_statelabels()
         self.clear_apentrys()
         self.clear_ctl_frame()
+        self.root.title("EdMo")
+        self.saveasPath = ''
 
         self.ctlFormulas.clear()
 
@@ -935,32 +937,19 @@ class mcGUI(object):
     def save_as(self):
         self.saveasPath = fd.asksaveasfilename(title='Select a file to save the model', initialdir='./saves',
                                           filetypes=[('json', '*.json')], defaultextension='.json')
-
-        for element in self.ctlFormulas:
-            element['variable'] = element['variable'].get() # save value instead of IntVar Object
-
-        data = {'initial': self.initial, 'states': self.states, 'transitions': self.transitions, 'formulas': self.ctlFormulas,
-                'layout': self.layout, 'highlight': self.highlight_label.cget("text")}
-
-        try:
-            with open(self.saveasPath, 'w+') as f:
-                json.dump(data, f)
-        except FileNotFoundError:
-            pass
-
-        for i in range(len(self.ctlFormulas)):
-            int_value = self.ctlFormulas[i]['variable']
-            self.ctlFormulas[i]['variable'] = tk.IntVar(value=int_value) # transform back to IntVar
-            self.ctl_Checkboxes[i].config(variable=self.ctlFormulas[i]['variable'])
         
         self.root.title(f"EdMo - {self.saveasPath}")
+
+        self.save_progress()
 
 
     def save_progress(self):
 
         if self.saveasPath == '':
-            self.save_as()
-        
+            self.saveasPath = fd.asksaveasfilename(title='Select a file to save the model', initialdir='./saves',
+                                          filetypes=[('json', '*.json')], defaultextension='.json')
+            self.root.title(f"EdMo - {self.saveasPath}")
+
         else:
 
             for element in self.ctlFormulas:
@@ -979,8 +968,8 @@ class mcGUI(object):
                 int_value = self.ctlFormulas[i]['variable']
                 self.ctlFormulas[i]['variable'] = tk.IntVar(value=int_value) # transform back to IntVar
                 self.ctl_Checkboxes[i].config(variable=self.ctlFormulas[i]['variable'])
-    
-    
+
+
     def load(self):
 
         self.saveasPath = fd.askopenfilename(title='Select a file to load a model', initialdir='./saves', filetypes=[('json', '*.json')])
